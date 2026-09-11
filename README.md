@@ -1,1 +1,0 @@
-# bankscope_challenge
