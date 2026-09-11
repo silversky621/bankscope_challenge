@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.TaskMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyColumn="task_id" keyProperty="taskId" >
+        INSERT INTO `bank`.`task`( user_id, ticket_number, task_type, task_detail_type, assigned_level, expected_waiting_time, status, member_id, ranking, created_at, updated_at,is_ai)
+        VALUES (
+                #{task.userId},
+                #{task.ticketNumber},
+                #{task.taskType},
+                #{task.taskDetailType},
+                #{task.assignedLevel},
+                #{task.expectedWaitingTime},
+                #{task.status},
+                #{task.memberId},
+                #{task.ranking},
+                IFNULL(#{task.createdAt}, NOW()),
+                IFNULL(#{task.updatedAt}, NOW()),
+                #{task.isAi}
+               )
+    </insert>
+    <update id="updateTaskStatus">
+        UPDATE `bank`.`task`
+        SET status = #{status},
+            updated_at = NOW()
+        WHERE task_id = #{taskId}
+          AND (#{status} != 'IN_PROGRESS' OR status = 'WAITING')
+    </update>
+
+    <select id="selectLastTicketNumber" resultType="string">
+        SELECT ticket_number FROM `bank`.`task`
+        WHERE ticket_number LIKE CONCAT(#{prefix}, '%')
+        AND DATE(created_at) = CURDATE()
+        ORDER BY ticket_number DESC LIMIT 1
+        FOR UPDATE
+    </select>
+
+    <select id="countWaitingTasks" resultType="int">
+        SELECT COUNT(*) FROM `bank`.`task`
+        WHERE task_type = #{taskType} AND status = 'WAITING'
+    </select>
+
+    <select id="selectAvailableMemberId" resultType="integer">
+        SELECT m.id FROM `bank`.`member` m
+        LEFT JOIN (
+            SELECT member_id,
+                   SUM(CASE task_type
+                       WHEN '빠른 업무'   THEN 5
+                       WHEN '상담 업무'   THEN 10
+                       WHEN '기업 • 특수' THEN 25
+                       ELSE 5
+                   END) AS total_wait_min
+            FROM `bank`.`task` WHERE status = 'WAITING'
+            GROUP BY member_id
+        ) w ON m.id = w.member_id
+        WHERE m.level >= #{minLevel} AND m.status = 1
+        ORDER BY COALESCE(w.total_wait_min, 0) ASC, m.level ASC
+        LIMIT 1
+    </select>
+
+    <select id="selectMemberTotalWaitTime" resultType="int">
+        SELECT COALESCE(SUM(CASE task_type
+            WHEN '빠른 업무'   THEN 5
+            WHEN '상담 업무'   THEN 10
+            WHEN '기업 • 특수' THEN 25
+            ELSE 5
+        END), 0)
+        FROM `bank`.`task`
+        WHERE member_id = #{memberId} AND status = 'WAITING'
+    </select>
+
+    <select id="countWaitingTasksByMemberId" resultType="int">
+        SELECT COUNT(*) FROM `bank`.`task`
+        WHERE member_id = #{memberId} AND status = 'WAITING'
+    </select>
+
+    <select id="selectTasksByUserId" resultType="com.bankscope.backend.vos.TaskVo">
+        SELECT `t1`.`task_id` AS `taskId`,
+               `t1`.`user_id` AS `userId`,
+               `t1`.`ticket_number` AS `ticketNumber`,
+               `t1`.`task_type` AS `taskType`,
+               `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`assigned_level` AS `assignedLevel`,
+               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               `t1`.`status` AS `status`,
+               `t1`.`member_id` AS `memberId`,
+               `t1`.`ranking` AS `ranking`,
+               `t1`.`created_at` AS `createdAt`,
+               `t1`.`updated_at` AS `updatedAt`,
+                `t2`.`name` AS `name`,
+                `t2`.`level` AS `level`
+            FROM `bank`.`task` AS `t1`
+            LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
+            WHERE `t1`.`user_id` = #{userId}
+            ORDER BY `createdAt` DESC
+    </select>
+
+    <select id="selectLatestTaskByUserId" resultType="com.bankscope.backend.vos.TaskVo">
+        SELECT `t1`.`task_id` AS `taskId`,
+               `t1`.`user_id` AS `userId`,
+               `t1`.`ticket_number` AS `ticketNumber`,
+               `t1`.`task_type` AS `taskType`,
+               `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`assigned_level` AS `assignedLevel`,
+               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               `t1`.`status` AS `status`,
+               `t1`.`member_id` AS `memberId`,
+               `t1`.`ranking` AS `ranking`,
+               `t1`.`created_at` AS `createdAt`,
+               `t1`.`updated_at` AS `updatedAt`,
+                `t2`.`name` AS `name`,
+                `t2`.`level` AS `level`,
+                `t2`.`counter_number` AS `counterNumber`
+            FROM `bank`.`task` AS `t1`
+            LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
+            WHERE `t1`.`user_id` = #{userId}
+            ORDER BY `createdAt` DESC
+            LIMIT 1
+    </select>
+
+    <select id="selectAverageTime" resultType="java.lang.String">
+        SELECT IFNULL(AVG(expected_waiting_time), 0)
+        FROM `bank`.`task`
+        WHERE status = 'WAITING'
+    </select>
+
+    <select id="countAvailableMembers" resultType="int">
+        SELECT COUNT(*) FROM `bank`.`member`
+        WHERE status = 1
+    </select>
+    <select id="countAllWaitingPerson" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT user_id)
+        FROM bank.task
+        WHERE status = 'WAITING';
+    </select>
+
+    <select id="selectHourlyAverageWorkloadMinutes" resultType="java.util.Map">
+        SELECT
+            HOUR(t.created_at) AS hour,
+            SUM(
+                CASE t.task_type
+                    WHEN '빠른 업무' THEN 5
+                    WHEN '상담 업무' THEN 10
+                    WHEN '기업 • 특수' THEN 25
+                    ELSE 5
+                END
+            ) / NULLIF((
+                SELECT COUNT(DISTINCT DATE(t2.created_at))
+                FROM bank.task t2
+                WHERE t2.created_at >= DATE_SUB(CURDATE(), INTERVAL 8 WEEK)
+                  AND DATE(t2.created_at) &lt; CURDATE()
+                  AND DAYOFWEEK(t2.created_at) = DAYOFWEEK(CURDATE())
+                  AND HOUR(t2.created_at) BETWEEN 9 AND 17
+            ), 0) AS avgWorkloadMinutes
+        FROM bank.task t
+        WHERE t.created_at >= DATE_SUB(CURDATE(), INTERVAL 8 WEEK)
+          AND DATE(t.created_at) &lt; CURDATE()
+          AND DAYOFWEEK(t.created_at) = DAYOFWEEK(CURDATE())
+          AND HOUR(t.created_at) BETWEEN 9 AND 17
+        GROUP BY HOUR(t.created_at)
+        ORDER BY hour
+    </select>
+
+    <select id="countWaitingPersonByTaskType" resultType="java.util.Map">
+        SELECT task_type AS taskType, COUNT(*) AS cnt
+        FROM bank.task
+        WHERE status = 'WAITING'
+        GROUP BY task_type
+    </select>
+    <select id="selectTasksByMemberLevel" resultType="com.bankscope.backend.vos.TaskVo">
+        SELECT `t1`.`task_id`               AS `taskId`,
+               `t1`.`user_id`              AS `userId`,
+               `t1`.`ticket_number`        AS `ticketNumber`,
+               `t1`.`task_type`            AS `taskType`,
+               `t1`.`task_detail_type`     AS `taskDetailType`,
+               `t1`.`assigned_level`       AS `assignedLevel`,
+               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               `t1`.`status`              AS `status`,
+               `t1`.`member_id`           AS `memberId`,
+               `t1`.`ranking`             AS `ranking`,
+               `t1`.`created_at`          AS `createdAt`,
+               `t1`.`updated_at`          AS `updatedAt`,
+               `t2`.`name`                AS `name`,
+               `t2`.`level`               AS `level`,
+               `t3`.`name`                AS `userName`,
+               `t3`.`grade`               AS `grade`,
+               `t3`.`gender`              AS `gender`,
+               `t3`.`age`                 AS `age`,
+               `t1`.`is_ai`               AS `isAi`
+        FROM `bank`.`task` AS `t1`
+                 LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
+                 LEFT JOIN `bank`.`user`   AS `t3` ON `t1`.`user_id`   = `t3`.`id`
+        WHERE (
+            (
+                `t1`.`status` = 'WAITING'
+                AND #{memberLevel} >= CASE `t1`.`task_detail_type`
+                    WHEN '입금'              THEN 1
+                    WHEN '출금'              THEN 1
+                    WHEN '카드수령'           THEN 1
+                    WHEN '이체'              THEN 2
+                    WHEN '체크카드 발급'      THEN 2
+                    WHEN '통장 비밀번호 변경' THEN 2
+                    WHEN '입출금 계좌개설'    THEN 2
+                    WHEN '적금'              THEN 2
+                    WHEN '신용카드 발급'      THEN 2
+                    WHEN '대출 상환'          THEN 2
+                    WHEN '예금'              THEN 3
+                    WHEN '신용대출'           THEN 3
+                    WHEN '전세자금대출'       THEN 3
+                    WHEN '금융상품가입'       THEN 3
+                    WHEN '법인카드 발급'      THEN 3
+                    WHEN '소상공인 대출'      THEN 4
+                    WHEN '연금신청'           THEN 4
+                    WHEN '주택담보대출'       THEN 4
+                    WHEN '법인계좌 개설'      THEN 4
+                    WHEN '기업대출'           THEN 4
+                    WHEN '연체관리'           THEN 4
+                    WHEN '부도관리'           THEN 5
+                    ELSE 1
+                END
+            )
+            OR (`t1`.`status` != 'WAITING' AND `t1`.`member_id` = #{memberId})
+        )
+        ORDER BY `t1`.`created_at`
+    </select>
+
+    <select id="selectTasksByMemberId" resultType="com.bankscope.backend.vos.TaskVo">
+        SELECT `t1`.`task_id` AS `taskId`,
+               `t1`.`user_id` AS `userId`,
+               `t1`.`ticket_number` AS `ticketNumber`,
+               `t1`.`task_type` AS `taskType`,
+               `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`assigned_level` AS `assignedLevel`,
+               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               `t1`.`status` AS `status`,
+               `t1`.`member_id` AS `memberId`,
+               `t1`.`ranking` AS `ranking`,
+               `t1`.`created_at` AS `createdAt`,
+               `t1`.`updated_at` AS `updatedAt`,
+               `t2`.`name` AS `name`,
+               `t2`.`level` AS `level`,
+                `t3`.`name` AS `userName`,
+                `t3`.`grade` AS `grade`,
+                `t3`.`gender` AS `gender`,
+                `t3`.`age` AS `age`,
+                `t1`.`is_ai` AS `isAi`
+        FROM `bank`.`task` AS `t1`
+                 LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
+                 LEFT JOIN `bank`.`user` AS `t3` ON `t1`.`user_id` = `t3`.`id`
+        WHERE `t1`.`member_id` = #{memberId}
+        ORDER BY `createdAt`
+    </select>
+
+    <select id="selectWaitingTasksByMemberId" resultType="com.bankscope.backend.entities.TaskEntity">
+        SELECT task_id       AS taskId,
+               assigned_level AS assignedLevel
+        FROM `bank`.`task`
+        WHERE member_id = #{memberId} AND status = 'WAITING'
+    </select>
+
+    <select id="selectLeastBusyMemberId" resultType="integer">
+        SELECT m.id FROM `bank`.`member` m
+        LEFT JOIN (
+            SELECT member_id, COUNT(*) AS waiting_cnt
+            FROM `bank`.`task` WHERE status = 'WAITING'
+            GROUP BY member_id
+        ) w ON m.id = w.member_id
+        WHERE m.level >= #{minLevel}
+          AND m.status = 1
+          AND m.id != #{excludeId}
+        ORDER BY COALESCE(w.waiting_cnt, 0) ASC, m.level ASC
+        LIMIT 1
+    </select>
+
+    <select id="selectHighestLevelMemberId" resultType="integer">
+        SELECT id FROM `bank`.`member`
+        WHERE status = 1
+          AND id != #{excludeId}
+        ORDER BY level DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectWaitingTasksByUserId" resultType="com.bankscope.backend.entities.TaskEntity">
+        SELECT
+            task_id AS taskId,
+            user_id AS userId,
+            ticket_number AS ticketNumber,
+            task_type AS taskType,
+            task_detail_type AS taskDetailType,
+            assigned_level AS assignedLevel,
+            expected_waiting_time AS expectedWaitingTime,
+            status AS status,
+            member_id AS memberId,
+            ranking AS ranking,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM `bank`.`task`
+        WHERE user_id = #{userId} AND status = 'WAITING'
+    </select>
+
+    <update id="updateMemberIdForTasks">
+        UPDATE `bank`.`task`
+        SET member_id = #{memberId},
+            updated_at = NOW()
+        WHERE task_id IN
+        <foreach item="id" collection="taskIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="tossTask">
+        UPDATE `bank`.`task`
+        SET member_id = #{targetMemberId},
+            status = #{status},
+            updated_at = NOW()
+        WHERE task_id = #{taskId}
+    </update>
+
+    <select id="countAvailableMembersByLevel" resultType="int">
+        SELECT COUNT(*) FROM `bank`.`member`
+        WHERE level >= #{minLevel} AND status = 1
+    </select>
+    <select id="getTask" resultType="com.bankscope.backend.vos.TaskVo">
+        SELECT `t1`.`task_id` AS `taskId`,
+               `t1`.`user_id` AS `userId`,
+               `t1`.`ticket_number` AS `ticketNumber`,
+               `t1`.`task_type` AS `taskType`,
+               `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`assigned_level` AS `assignedLevel`,
+               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               `t1`.`status` AS `status`,
+               `t1`.`member_id` AS `memberId`,
+               `t1`.`ranking` AS `ranking`,
+               `t1`.`created_at` AS `createdAt`,
+               `t1`.`updated_at` AS `updatedAt`,
+               `t2`.`name` AS `name`,
+               `t2`.`level` AS `level`
+        FROM `bank`.`task` AS `t1`
+                 LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
+        WHERE `t1`.`task_id` = #{taskId}
+        ORDER BY `createdAt` DESC
+    </select>
+
+    <select id="countInProgressTasks" resultType="int">
+        SELECT COUNT(DISTINCT member_id)
+        FROM `bank`.`task`
+        WHERE status = 'IN_PROGRESS'
+    </select>
+
+    <select id="selectTaskRatioByLevel" resultType="java.util.Map">
+        SELECT
+        t.assigned_level AS taskLevel,
+        COUNT(t.task_id) AS taskCount
+        FROM `bank`.`task` t
+        WHERE DATE(t.created_at) = CURDATE()
+        AND t.status IN ('COMPLETED')
+        GROUP BY t.assigned_level
+        ORDER BY t.assigned_level ASC
+    </select>
+
+    <select id="selectCounterStatus" resultType="com.bankscope.backend.vos.CounterStatusVo">
+        SELECT
+        m.id AS memberId,
+        m.name AS memberName,
+        m.level AS memberLevel,
+
+        -- 1. 업무 상태 로직 (IN_PROGRESS인 태스크가 있으면 '업무중', 없으면 '대기중')
+        IF(t.task_id IS NULL, '대기중', '업무중') AS currentTaskStatus,
+
+        -- 2. 업무 수락 시점 고정 (IN_PROGRESS 상태일 때의 updated_at을 사용)
+        -- 업무 종료(status 변경) 시 t.task_id가 NULL이 되어 시간도 자연스럽게 사라짐
+        t.updated_at AS taskStartedAt,
+        t.expected_waiting_time AS `expectedWaitingTime`,
+        -- 3. 나머지 필요한 데이터들
+        m.level AS memberRank, -- 필요시 CASE 문으로 '사원', '대리' 변환 가능
+        (SELECT COUNT(*) FROM `bank`.`task` WHERE member_id = m.id AND status = 'COMPLETED' AND DATE(updated_at) = CURDATE()) AS todayCompletedCount,
+        (SELECT COUNT(*) FROM `bank`.`task` WHERE status = 'WAITING') AS waitingCount,
+        t.ticket_number AS currentTicket,
+        t.user_id AS userId,
+        t.task_type AS taskType
+        FROM `bank`.`member` m
+        -- 핵심: 현재 해당 직원이 '진행 중'인 업무만 조인
+        LEFT JOIN `bank`.`task` t ON m.id = t.member_id AND t.status = 'IN_PROGRESS'
+        WHERE m.status = 1 -- 출근한 직원만 조회
+        ORDER BY m.level DESC, m.name ASC
+    </select>
+
+
+    <select id="selectBranchTotalStats" resultType="java.util.Map">
+        SELECT
+        -- 오늘 생성되었고 현재 대기 중인 업무
+        COUNT(CASE WHEN status = 'WAITING' AND created_at >= CURDATE() THEN 1 END) AS totalWaiting,
+        -- 오늘 완료 처리된 업무
+        COUNT(CASE WHEN status = 'COMPLETED' AND updated_at >= CURDATE() THEN 1 END) AS totalCompleted
+        FROM `bank`.`task`
+        WHERE (status = 'WAITING' AND created_at >= CURDATE())
+        OR (status = 'COMPLETED' AND updated_at >= CURDATE())
+    </select>
+
+    <select id="selectDashboardWaitingList" resultType="com.bankscope.backend.vos.DashboardWaitingVo">
+        SELECT
+        t.task_id AS taskId,
+        t.ticket_number AS ticketNumber,
+        u.name AS userName,
+        t.task_type AS taskType,
+        t.task_detail_type AS taskDetailType,
+        m.id AS memberId,
+        m.name AS memberName,
+        m.counter_number AS counterNumber, -- member 테이블에 창구번호 컬럼이 있다고 가정
+        t.status AS status
+        FROM `bank`.`task` t
+        LEFT JOIN `bank`.`user` u ON t.user_id = u.id
+        LEFT JOIN `bank`.`member` m ON t.member_id = m.id
+        WHERE t.status IN ('WAITING')
+        ORDER BY t.created_at ASC
+    </select>
+    <select id="selectTaskLogByUserId" resultType="com.bankscope.backend.vos.TaskProcessingVo">
+        SELECT `t1`.`log_id`          AS `logId`,
+               `t1`.`task_id`         AS `taskId`,
+               `t1`.`member_id`       AS `memberId`,
+               `t1`.`action_type`     AS `actionType`,
+               `t1`.`processing_note` AS `processingNote`,
+               `t1`.`created_at`      AS `createdAt`,
+               `t3`.`id`              AS `userId`
+        FROM `bank`.`task_processing_log` AS `t1`
+                 LEFT JOIN `bank`.`task` AS `t2` on t1.task_id = t2.task_id
+                 LEFT JOIN `bank`.`user` AS `t3` on t2.user_id = t3.id
+        WHERE t3.id = #{userId}
+        ORDER BY t1.created_at DESC
+    </select>
+</mapper>

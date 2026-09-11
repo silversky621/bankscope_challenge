@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.LoanMapper">
+
+    <!-- 대출 생성 -->
+    <insert id="insertLoan" parameterType="LoanEntity"
+            useGeneratedKeys="true" keyProperty="loan.loanId">
+        INSERT INTO `bank`.`loan`
+        (user_id, product_id, linked_account_id,
+         principal_amount, outstanding_amount, interest_rate,
+         payment_day, info, status, overdue_amount,
+         maturity_date, created_at, updated_at)
+        VALUES
+            (#{loan.userId}, #{loan.productId}, #{loan.linkedAccountId},
+             #{loan.principalAmount}, #{loan.outstandingAmount}, #{loan.interestRate},
+             #{loan.paymentDay}, #{loan.info}, 'ACTIVE', 0,
+             #{loan.maturityDate}, NOW(), NOW())
+    </insert>
+
+    <!-- 대출 단건 조회 -->
+    <select id="selectLoanById" resultType="LoanEntity">
+        SELECT
+            loan_id            AS loanId,
+            user_id            AS userId,
+            product_id         AS productId,
+            linked_account_id  AS linkedAccountId,
+            principal_amount   AS principalAmount,
+            outstanding_amount AS outstandingAmount,
+            interest_rate      AS interestRate,
+            payment_day        AS paymentDay,
+            info,
+            status,
+            overdue_date       AS overdueDate,
+            overdue_amount     AS overdueAmount,
+            maturity_date      AS maturityDate,
+            created_at         AS createdAt,
+            updated_at         AS updatedAt
+        FROM `bank`.`loan`
+        WHERE loan_id = #{loanId}
+    </select>
+
+    <!-- 유저별 대출 목록 조회 -->
+    <select id="selectLoansByUserId" resultType="com.bankscope.backend.vos.LoanVo">
+        SELECT
+            `t1`.loan_id            AS loanId,
+            `t1`.user_id            AS userId,
+            `t1`.product_id         AS productId,
+            `t1`.linked_account_id  AS linkedAccountId,
+            `t1`.principal_amount   AS principalAmount,
+            `t1`.outstanding_amount AS outstandingAmount,
+            `t1`.interest_rate      AS interestRate,
+            `t1`.payment_day        AS paymentDay,
+            `t1`.info,
+            `t1`.status,
+            `t1`.overdue_date       AS overdueDate,
+            `t1`.overdue_amount     AS overdueAmount,
+            `t1`.maturity_date      AS maturityDate,
+            `t1`.created_at         AS createdAt,
+            `t1`.updated_at         AS updatedAt,
+            `t2`.product_name       AS productName,
+            `t2`.`description`      AS description
+        FROM `bank`.`loan` AS `t1`
+                 LEFT JOIN `bank`.`financial_product` AS `t2` on t1.product_id = t2.product_id
+        WHERE user_id = #{userId} AND status != 'COMPLETED'
+        ORDER BY loan_id DESC
+    </select>
+
+    <select id="selectActiveAndOverdueLoansByUserId" resultType="LoanEntity">
+        SELECT
+            loan_id            AS loanId,
+            user_id            AS userId,
+            product_id         AS productId,
+            linked_account_id  AS linkedAccountId,
+            principal_amount   AS principalAmount,
+            outstanding_amount AS outstandingAmount,
+            interest_rate      AS interestRate,
+            payment_day        AS paymentDay,
+            info,
+            status,
+            overdue_date       AS overdueDate,
+            overdue_amount     AS overdueAmount,
+            maturity_date      AS maturityDate,
+            created_at         AS createdAt,
+            updated_at         AS updatedAt
+        FROM `bank`.`loan`
+        WHERE user_id = #{userId} AND status IN ('ACTIVE', 'OVERDUE')
+    </select>
+
+    <select id="selectBankruptLoansByUserId" resultType="LoanEntity">
+        SELECT
+            loan_id            AS loanId,
+            user_id            AS userId,
+            product_id         AS productId,
+            linked_account_id  AS linkedAccountId,
+            principal_amount   AS principalAmount,
+            outstanding_amount AS outstandingAmount,
+            interest_rate      AS interestRate,
+            payment_day        AS paymentDay,
+            info,
+            status,
+            overdue_date       AS overdueDate,
+            overdue_amount     AS overdueAmount,
+            maturity_date      AS maturityDate,
+            created_at         AS createdAt,
+            updated_at         AS updatedAt
+        FROM `bank`.`loan`
+        WHERE user_id = #{userId} AND status = 'BANKRUPTCY'
+    </select>
+
+    <!-- 잔여 대출금 업데이트 -->
+    <update id="updateOutstandingAmount">
+        UPDATE `bank`.`loan`
+        SET outstanding_amount = #{outstandingAmount},
+            updated_at         = NOW()
+        WHERE loan_id = #{loanId}
+    </update>
+
+    <!-- 대출 상태 변경 -->
+    <update id="updateLoanStatus">
+        UPDATE `bank`.`loan`
+        SET status     = #{status},
+            updated_at = NOW()
+        WHERE loan_id = #{loanId}
+    </update>
+
+    <update id="updateLoan" parameterType="LoanEntity">
+        UPDATE `bank`.`loan`
+        SET
+            outstanding_amount = #{loan.outstandingAmount},
+            status = #{loan.status},
+            updated_at = NOW()
+        WHERE loan_id = #{loan.loanId}
+    </update>
+
+    <!-- 대출 정보 업데이트 (Patch) -->
+    <update id="updateLoanInfo">
+        UPDATE `bank`.`loan`
+        <set>
+            <if test="loan.interestRate != null">
+                interest_rate = #{loan.interestRate},
+            </if>
+            <if test="loan.paymentDay != null">
+                payment_day = #{loan.paymentDay},
+            </if>
+            <if test="loan.info != null">
+                info = #{loan.info},
+            </if>
+            <if test="loan.status != null and loan.status != ''">
+                status = #{loan.status},
+            </if>
+            <if test="loan.overdueDate != null">
+                overdue_date = #{loan.overdueDate},
+            </if>
+            <if test="loan.overdueAmount != null">
+                overdue_amount = #{loan.overdueAmount},
+            </if>
+            <if test="loan.maturityDate != null and loan.maturityDate != ''">
+                maturity_date = #{loan.maturityDate},
+            </if>
+            updated_at = NOW()
+        </set>
+        WHERE loan_id = #{loan.loanId}
+    </update>
+
+    <select id="selectOverdueLoansByUserId" resultType="LoanEntity">
+        SELECT loan_id AS loanId, overdue_amount AS overdueAmount, overdue_date AS overdueDate, info
+        FROM `bank`.`loan`
+        WHERE user_id = #{userId} AND (status = 'OVERDUE' OR overdue_amount > 0)
+    </select>
+
+    <select id="selectTotalOverdueAmountByUserId" resultType="long">
+        SELECT IFNULL(SUM(overdue_amount), 0)
+        FROM `bank`.`loan`
+        WHERE user_id = #{userId}
+    </select>
+    <select id="selectLoanVoById" resultType="com.bankscope.backend.vos.LoanVo">
+        SELECT
+            `t1`.loan_id            AS loanId,
+            `t1`.user_id            AS userId,
+            `t1`.product_id         AS productId,
+            `t1`.linked_account_id  AS linkedAccountId,
+            `t1`.principal_amount   AS principalAmount,
+            `t1`.outstanding_amount AS outstandingAmount,
+            `t1`.interest_rate      AS interestRate,
+            `t1`.payment_day        AS paymentDay,
+            `t1`.info,
+            `t1`.status,
+            `t1`.overdue_date       AS overdueDate,
+            `t1`.overdue_amount     AS overdueAmount,
+            `t1`.maturity_date      AS maturityDate,
+            `t1`.created_at         AS createdAt,
+            `t1`.updated_at         AS updatedAt,
+            `t2`.product_name       AS productName,
+            `t2`.`description`      AS description
+        FROM `bank`.`loan` AS `t1`
+            LEFT JOIN `bank`.`financial_product` AS `t2` on t1.product_id = t2.product_id
+        WHERE loan_id = #{loanId}
+    </select>
+
+
+    <update id="updateLoanOverdueStatus">
+        UPDATE `bank`.`loan`
+        SET overdue_amount = overdue_amount + #{amount},
+        status = 'OVERDUE'
+        WHERE loan_id = #{loanId}
+    </update>
+</mapper>

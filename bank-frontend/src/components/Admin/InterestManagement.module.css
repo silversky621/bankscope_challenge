@@ -1,0 +1,337 @@
+/*
+* {
+    box-sizing: border-box; 
+}
+*/
+
+.layout {
+    padding: 0 40px 40px 40px; 
+    max-width: 1600px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.header {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.pageTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    text-align: left;
+    padding-top: 10px; 
+    padding-bottom: 30px; 
+}
+
+.searchAndTabRow {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tabContainer {
+    display: flex;
+    gap: 20px;
+}
+
+.tabBtn {
+    padding: 10px 4px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: color 0.2s;
+}
+
+.activeTab {
+    color: #009A83;
+    font-weight: 600;
+    border-bottom: 2px solid #009A83;
+}
+
+.tableWrapper {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.dataTable th {
+    background-color: #f9fafb;
+    padding: 14px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dataTable td {
+    padding: 16px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #111827;
+    vertical-align: middle;
+}
+
+.clickableRow { 
+    cursor: pointer; 
+}
+
+.clickableRow:hover { 
+    background-color: #f9fafb; 
+}
+
+.leftAlign { 
+    text-align: left !important; 
+    padding-left: 20px !important; 
+}
+
+.num { 
+    font-variant-numeric: tabular-nums; 
+}
+
+.highlightRate { 
+    font-weight: 700; 
+    color: #009A83; 
+}
+
+.dimmedRate { 
+    color: #6b7280; 
+    font-weight: 500; 
+    margin-right: 8px; 
+}
+
+.typeBadge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+}
+
+.trendBadge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.trendUp { 
+    background-color: #ecfdf5; 
+    color: #059669; 
+    border: 1px solid #a7f3d0; 
+}
+
+.trendFlat { 
+    background-color: #f3f4f6; 
+    color: #9ca3af; 
+    border: 1px solid #e5e7eb; 
+}
+
+.trendDown { 
+    background-color: #fef2f2; 
+    color: #e11d48; 
+    border: 1px solid #fecaca; 
+}
+
+.modalOverlay {
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0, 0, 0, 0.4);
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000;
+}
+
+.modalBox {
+    background: #ffffff; 
+    width: 900px; 
+    max-height: 85vh;
+    border-radius: 12px; 
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden;
+}
+
+.modalHeader {
+    padding: 20px 32px; 
+    border-bottom: 1px solid #dee2e6; 
+    background: #e9ecef;
+    display: flex; 
+    justify-content: space-between;
+}
+
+.modalTitleArea { 
+    text-align: left; 
+}
+
+.modalTitleArea h2 { 
+    margin: 0; 
+    font-size: 20px; 
+    font-weight: 700; 
+    color: #333; 
+}
+
+.closeBtn { 
+    background: transparent; 
+    border: none; 
+    font-size: 24px; 
+    cursor: pointer; 
+    color: #666; 
+}
+
+.modalBody { 
+    padding: 30px; 
+    flex: 1; 
+    overflow-y: auto; 
+}
+
+.modalSplit { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 30px; 
+}
+
+
+.formSectionTitle {
+    font-size: 15px;
+    font-weight: 800;
+    color: #333;
+    margin-bottom: 12px; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 8px; 
+}
+
+.rowGroup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px; 
+    margin-bottom: 12px; 
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px; 
+}
+
+.inputLabel {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+}
+
+.cleanInput {
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+    width: 100%; 
+    padding: 8px 10px; 
+    border: 1px solid #ced4da; 
+    border-radius: 4px; 
+    outline: none;
+}
+
+.cleanInput:focus { 
+    border-color: #009A83; 
+}
+
+.calcResultBox {
+    background: #e6f5f2; 
+    padding: 12px; 
+    border: 1px solid #009A83; 
+    border-radius: 4px;
+    margin: 10px 0 15px 0; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.modalFooter { 
+    padding: 20px; 
+    border-top: 1px solid #f1f3f5; 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
+}
+
+.cancelBtn { 
+    background: #e9ecef; 
+    padding: 10px 25px; 
+    border-radius: 4px; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 700; 
+}
+
+.actionBtn { 
+    background: #009A83; 
+    color: white; 
+    padding: 10px 25px; 
+    border-radius: 4px; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 700; 
+}
+
+.actionBtn:hover { 
+    background: #007f6b; 
+}
+
+.timeline { 
+    position: relative; 
+    padding-left: 20px; 
+}
+
+.timelineItem { 
+    position: relative; 
+    margin-bottom: 20px; 
+    text-align: left; 
+}
+
+.timelineItem::before {
+    content: ''; 
+    position: absolute; 
+    left: -20px; 
+    top: 5px; 
+    width: 10px; 
+    height: 10px;
+    border-radius: 50%; 
+    background: #009A83;
+}
+
+.tlContent { 
+    background: #f8fafc; 
+    padding: 12px; 
+    border-radius: 4px; 
+    border: 1px solid #e2e8f0; 
+}
+
+.tlReason { 
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; 
+    font-size: 13px; 
+    color: #555; 
+    margin-top: 5px; 
+}

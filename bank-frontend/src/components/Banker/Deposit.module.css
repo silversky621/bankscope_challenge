@@ -1,0 +1,72 @@
+.container { width: 100%; background-color: #fff; box-sizing: border-box; }
+.header { background-color: #F0FAF8; padding: 12px 20px; border-radius: 4px; display: flex; align-items: center; gap: 8px; }
+.headerTitle { font-weight: 600; font-size: 1rem; color: #333; }
+
+.formContainer { display: flex; flex-direction: column; gap: 25px; padding: 10px; background-color: #F0FAF8;}
+.section { display: flex; flex-direction: column; width: 100%; }
+
+/* 라벨 정렬 */
+.labelRow { display: flex; justify-content: space-between; margin-bottom: 8px; position: relative; }
+.centerLabel { flex: 1; text-align: center; font-size: 0.85rem; font-weight: 600; color: #444; }
+.rightLabel { font-size: 0.75rem; color: #888; position: absolute; right: 0; }
+
+/* 입력 행 정렬 */
+.inputRow { display: flex; gap: 12px; margin-bottom: 8px; }
+
+/* 껍데기 박스 공통 스타일 (사용자가 좋아했던 그 스타일!) */
+.customSelectMain, .customSelectFull, .aliasInputBox, .bankSelect, .inputFieldBox, .amountFieldBox {
+    border: 1.5px solid #6ED3B9;
+    border-radius: 12px;
+    padding: 0 15px;
+    background: #fff;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.customSelectMain { flex: 7; justify-content: space-between; }
+.aliasInputBox { flex: 3; }
+.amountFieldBox { justify-content: flex-end; gap: 10px; }
+.customSelectFull { flex: 1; justify-content: space-between; }
+
+
+/* 내부 입력 태그 스타일 죽이기 (기능만 남기기) */
+.section input, .section select {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    width: 100%;
+    height: 100%;
+    font-size: 0.95rem;
+    color: #333;
+    padding: 0;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+
+.aliasInputBox input, .amountFieldBox input {
+    text-align: right; /* 별칭과 금액은 우측 정렬 */
+}
+
+/* 민트색 정보 박스 */
+.mintInfoBox {
+    width: 100%; background-color: #6ED3B9; color: #fff; padding: 12px;
+    border-radius: 12px; text-align: center; font-size: 0.9rem; box-sizing: border-box;
+}
+
+/* 비밀번호 그리드 */
+.gridTwo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.inputGroup { display: flex; flex-direction: column; gap: 8px; }
+.inputFieldBox { width: 100%; }
+
+.unit { color: #333; font-weight: 500; font-size: 0.9rem; white-space: nowrap; }
+.arrowUp { font-size: 0.7rem; color: #333; pointer-events: none; }
+
+/* 하단 버튼 */
+.buttonRow { display: flex; gap: 15px; margin-top: 10px; }
+.btnCancel { flex: 1; padding: 10px; background-color: #E2E2E2; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.btnSubmit { flex: 1; padding: 10px; background-color: #559E89; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }

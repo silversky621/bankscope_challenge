@@ -1,0 +1,251 @@
+/* 모달 배경 (어둡게 처리) */
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(33, 33, 33, 0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 3000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.isOpen {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 모달 컨텐츠 박스 */
+.modalContent {
+  background: white;
+  width: 850px;
+  max-width: 95vw;
+  /*max-height: 80vh; !* 화면을 넘지 않도록 최대 높이 설정 *!*/
+  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 30px;
+  padding: 40px; /* 원래 패딩으로 복구 */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 1px solid #eee;
+  position: relative;
+  transform: translateY(-20px);
+  transition: transform 0.3s ease-in-out;
+  overflow: hidden; /* 라인이 모달 둥근 모서리에 맞춰 잘리도록 복구 */
+}
+
+.isOpen .modalContent {
+  transform: translateY(0);
+}
+
+/* 상단 포인트 라인 */
+.modalContent::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 8px;
+  background: linear-gradient(to right, #0ccda3, #2eb086);
+  border-radius: 1rem;
+}
+
+/* 헤더 영역 */
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 25px;
+  flex-shrink: 0; /* 헤더는 축소되지 않도록 설정 */
+}
+
+.header h2 {
+  font-size: 1.8rem;
+  color: #2eb086;
+  margin: 0;
+  font-weight: bold;
+}
+
+.closeBtn {
+  background: none; border: none;
+  font-size: 2.5rem; cursor: pointer; color: #ccc;
+  transition: color 0.2s;
+  line-height: 1;
+}
+.closeBtn:hover { color: #2eb086; }
+
+/* ============================================ */
+/* 좌우 2단 레이아웃 컨테이너                    */
+/* ============================================ */
+.bodyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 15px;
+  width: 100%; /* 넓게 사용 */
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+/* 좌측: 상품 상세 영역 */
+.leftPane {
+  display: flex;
+  flex-direction: column;
+  padding-right: 15px;
+  border-right: 1px solid #f0f0f0;
+  overflow-y: auto;
+}
+
+/* 우측: 가입 폼 영역 */
+.rightPane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-right: 5px;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar for Panes */
+.leftPane::-webkit-scrollbar,
+.rightPane::-webkit-scrollbar {
+  width: 6px;
+}
+.leftPane::-webkit-scrollbar-thumb,
+.rightPane::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 4px;
+}
+.leftPane::-webkit-scrollbar-track,
+.rightPane::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* 상품 뱃지 및 이름 */
+.productBadge {
+  display: inline-block;
+  align-self: flex-start;
+  background: #e7f6f2;
+  color: #2eb086;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.productName {
+  font-size: 1.6rem;
+  margin: 10px 0;
+  color: #333;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.productDesc {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+/* 상품 상세 정보 아이템 (금리, 금액, 기간) */
+.productDetailItem {
+  background-color: #f8f9fa;
+  border-left: 4px solid #2eb086;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 0 8px 8px 0;
+}
+
+.productDetailItem p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #495057;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.productDetailItem .label {
+  font-weight: 600;
+  color: #343a40;
+  font-size: 0.8rem;
+}
+
+.productDetailItem .value {
+  font-weight: 700;
+  color: #2eb086;
+  font-size: 0.8rem;
+}
+
+
+.divider { border: 0; border-top: 1px solid #f0f0f0; margin: 20px 0; }
+
+/* 폼 영역 */
+.formSection label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #444;
+  font-size: 1rem;
+}
+
+.select {
+  width: 100%; height: 55px;
+  border-radius: 15px;
+  border: 2px solid #f0f0f0;
+  padding: 0 15px;
+  font-size: 1.1rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.select:focus { border-color: #2eb086; }
+
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay,
+  .modalContent {
+    transition: none;
+  }
+
+  .modalContent {
+    transform: none;
+  }
+}
+
+/* 상세 설명 박스 */
+.infoBox {
+  background: #f9fbfb;
+  padding: 20px;
+  border-radius: 20px;
+  margin-top: 0;
+  border-left: 5px solid #2eb086;
+  flex: 1;
+}
+
+.infoBox h4 {
+  margin-top: 0; margin-bottom: 8px;
+  font-size: 1rem; color: #2eb086;
+}
+
+.infoBox p {
+  font-size: 1rem; color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 반응형: 좁은 화면에서는 세로로 쌓기 */
+@media (max-width: 768px) {
+  .bodyGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    overflow-y: auto;
+  }
+  .leftPane {
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+    padding-right: 0;
+    padding-bottom: 20px;
+    overflow-y: visible; /* 모바일에서는 전체 스크롤 */
+  }
+  .rightPane {
+    overflow-y: visible; /* 모바일에서는 전체 스크롤 */
+  }
+}

@@ -1,0 +1,406 @@
+.homeContainer {
+    width: 100%;
+    background-color: #f8f9fa; 
+    min-height: 100vh;
+    padding-bottom: 100px;
+    font-family: 'Pretendard', -apple-system, sans-serif;
+}
+
+.heroWrapper {
+    width: 100%;
+    background-color: #2b2724;
+    display: flex;
+    justify-content: center;
+}
+
+/* 1. 새로 추가: 슬라이더 바깥 영역 (넘치는 사진 숨김) */
+.sliderContainer {
+    width: 100%;
+    max-width: 1920px;
+    overflow: hidden; 
+}
+
+/* 2. 새로 추가: 기차처럼 사진들을 이어 붙여서 움직일 트랙 */
+.sliderTrack {
+    display: flex;
+    width: 100%;
+    /* 8초 동안 무한 반복! */
+    animation: slideBanner 8s infinite ease-in-out; 
+}
+
+/* 3. 기존 덮어쓰기: 사진이 영역에 맞춰 찌그러지지 않게 보호 */
+.heroImage {
+    width: 100%;
+    flex-shrink: 0; 
+    height: auto;
+    display: block;
+    /* vertical-align: bottom; */
+}
+
+/* 4. 새로 추가: 무한 슬라이드 타이밍 제어 */
+@keyframes slideBanner {
+    0%, 40% { transform: translateX(0); }             /* 1번 사진 멈춤 */
+    50%, 90% { transform: translateX(-100%); }        /* 2번 사진으로 넘어가서 멈춤 */
+    100% { transform: translateX(-200%); }            /* 1번 사진 복사본으로 스무스하게 연결 */
+}
+
+.mainContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.menuSection { 
+    margin-top: 70px; 
+}
+
+.sectionHeader { 
+    margin-bottom: 25px; 
+    text-align: left;
+}
+
+.sectionHeader h2 {
+    font-size: 1.6rem;
+    color: #222;
+    margin-bottom: 8px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.sectionHeader p {
+    color: #888;
+    font-size: 0.95rem;
+}
+
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 24px;
+    padding: 35px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0,0,0,0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.iconPlaceholder {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cardIcon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cardText h3 {
+    font-size: 1.05rem;
+    color: #333;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.redText {
+    display: block;
+    color: #ff3b30;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.bottomWidgets {
+    margin-top: 70px;
+    display: flex;
+    gap: 20px;
+}
+
+.newsWidget {
+    flex: 2;
+    background-color: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    padding: 35px 40px;
+    text-align: left;
+}
+
+.promoWidget {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    padding: 35px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.promoWidget:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+}
+
+.promoIcon {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.promoWidget:hover .promoIcon {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.widgetHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.tabs {
+    display: flex;
+    gap: 20px;
+}
+
+.activeTab {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #009A83;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.inactiveTab {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #bbb;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+                
+.inactiveTab:hover { color: #888; }
+
+.moreBtn {
+    font-size: 0.9rem;
+    color: #555;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.newsList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.newsList li {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #f4f4f4;
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.newsList li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.newsTitle {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 20px;
+}
+
+.newsDate {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.promoContent {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.promoText h3 {
+    font-size: 1.15rem;
+    color: #333;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.promoText p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+@media (max-width: 1024px) {
+    .cardGrid { grid-template-columns: repeat(3, 1fr); }
+    .bottomWidgets { flex-direction: column; }
+}
+
+@media (max-width: 768px) {
+    .cardGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .cardGrid { grid-template-columns: 1fr; }
+}
+
+.modalBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4); /* 어두운 반투명 배경 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* 화면 가장 최상단에 뜨도록 */
+}
+
+.modalContainer {
+    background-color: #ffffff;
+    width: 480px; /* 지은님 디자인과 유사한 너비 */
+    border-radius: 24px;
+    padding: 45px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    /* 모달이 나타날 때 살짝 위로 올라오는 부드러운 애니메이션 */
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modalIconWrapper {
+    margin-bottom: 20px;
+}
+
+.modalTitle {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 30px;
+    line-height: 1.4;
+    letter-spacing: -0.5px;
+}
+
+.modalMessageContainer {
+    background-color: #f4f5f6; /* 연한 회색 둥근 배경 */
+    border-radius: 16px;
+    padding: 30px 20px;
+    width: 100%;
+    margin-bottom: 35px;
+}
+
+.modalMessage {
+    font-size: 1.05rem;
+    color: #222;
+    line-height: 1.6;
+    font-weight: 500;
+    word-break: keep-all; /* 한글 단어가 중간에 잘리지 않도록 보호 */
+    margin: 0;
+}
+
+.modalButton {
+    background-color: #59927d; /* 💡 사진에 있는 세련된 초록색 */
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 30px; /* 알약처럼 둥근 모서리 */
+    padding: 18px 0;
+    width: 100%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    letter-spacing: -0.5px;
+}
+
+.modalButton:hover {
+    background-color: #487866; /* 마우스 올렸을 때 살짝 어두워짐 */
+}
+
+.termsContentBox {
+  height: 250px;
+  overflow-y: auto;
+  background: #f9fafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 20px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.termsContentBox::-webkit-scrollbar {
+  width: 6px;
+}
+.termsContentBox::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 4px;
+}
+
+.modalSingleButtonWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 40px;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.singleButton {
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 18px;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  white-space: nowrap;
+  
+  background-color: #4A9C82;
+  color: white !important;
+  
+  border-radius: 30px;
+  padding: 18px;
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(74, 156, 130, 0.3);
+}
+
+.singleButton:hover {
+  background-color: #3b7e68;
+  transform: translateY(-2px);
+}

@@ -1,0 +1,121 @@
+.loginContainer {
+    width: 20rem;
+    margin: 0 auto;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.39);
+    box-shadow: 0 8px 32px 0 rgba(124, 124, 124, 0.37);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(1px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-family: "Nanum Gothic", sans-serif;
+}
+
+.loginContainer h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #333;
+    font-weight: 900;
+    font-size: 1.8rem;
+}
+.loginContainer h1 {
+    text-align: center;
+    margin-bottom: 3rem;
+    color: #808080;
+    font-weight: 500;
+    font-size: 1.3rem;
+   letter-spacing: 0.05rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputGroup {
+    margin-bottom: 15px;
+}
+
+.inputGroup label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+    text-align: left;
+    padding-left: 1rem;
+    font-size: 1.1rem;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.7rem;
+    height: 1rem;
+    object-fit: contain;
+    z-index: 10; /* 인풋 위로 올라오게 함 */
+
+}
+
+.inputGroup input {
+    width: 100%;
+    padding: 10px 10px 10px 30px; /* 아이콘 공간 확보 */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+    outline: none;
+    background: rgba(255, 255, 255, 0.6);
+    font-family: "Nanum Gothic", sans-serif;
+}
+.inputGroup input:focus {
+    border: 1px solid #009A83;
+    box-shadow: 0 0 0 2px rgba(0, 154, 131, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.submitButton {
+    padding: 12px;
+    background-color: #009A83;
+    color: white;
+    border: none;
+    border-radius: 1rem;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin:1rem 0;
+    font-family: "Nanum Gothic", sans-serif;
+    font-weight: 700;
+}
+
+.submitButton:hover {
+    background-color: #027c6b;
+}
+
+.registerLink {
+    margin-top: 5px;
+    text-align: center;
+
+}
+
+.registerLink a {
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+.registerLink a:hover {
+    text-decoration: underline;
+}
+.copyright {
+    margin-top: 2rem ;
+    font-size: 0.7rem;
+    color: #7e7e7e;
+}

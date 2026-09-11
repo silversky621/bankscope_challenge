@@ -1,0 +1,294 @@
+.pageContainer {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  background-color: #f4f5f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: 'Pretendard', sans-serif;
+  box-sizing: border-box;
+}
+
+.mypageLayout {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f5f6;
+}
+
+.mainContent {
+  width: 100%;
+  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 50px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.balanceBox {
+  margin-bottom: 40px;
+}
+
+.balanceLabel {
+  font-size: 16px;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.balanceAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.inputRow {
+  display: flex;
+  gap: 15px;
+}
+
+.selectBox {
+  flex: 1;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.inputBox {
+  flex: 3;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.inputBox:focus, .selectBox:focus {
+  border-color: #4A9C82;
+}
+
+.submitBtn {
+  margin-top: auto;
+  background-color: #4A9C82;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+
+.pinActionRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pinActionRow .submitBtn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.pinCancelBtn {
+  flex: 1;
+  background-color: #e5e7eb;
+  color: #374151;
+  border: none;
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.disabledBtn {
+  background-color: #ccc !important;
+  cursor: not-allowed !important;
+}
+
+.completeBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  gap: 15px;
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.checkIcon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+}
+
+.completeTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.completeDesc {
+  color: #888;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.pinModalBackdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.pinModalContent {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.pinDisplay {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  margin-top: 10px;
+}
+
+.pinDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+}
+
+.pinDotFilled {
+  background-color: #4A9C82;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.keyBtn {
+  background: #f4f5f6;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.emptyKey {
+  background: none;
+  pointer-events: none;
+}
+
+@media screen and (max-width: 768px) {
+  .pageContainer {
+    padding: 20px 15px;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .mypageLayout {
+    flex-direction: column;
+  }
+
+  .mainContent {
+    padding: 30px 20px;
+    min-height: auto;
+    border-radius: 20px;
+  }
+
+  .sectionTitle {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .balanceBox {
+    margin-bottom: 30px;
+    text-align: center;
+    background-color: #f9fafa;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .balanceLabel {
+    font-size: 14px;
+  }
+
+  .balanceAmount {
+    font-size: 24px;
+  }
+
+  .inputRow {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .selectBox, 
+  .inputBox {
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+  }
+
+  .submitBtn {
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  .pinModalContent {
+    padding: 30px 20px;
+  }
+
+  .keyBtn {
+    padding: 12px 0;
+    font-size: 18px;
+  }
+}

@@ -1,0 +1,170 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(33, 33, 33, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.modalContainer {
+    width: 440px; /* 크기 축소 */
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.header {
+    background-color: #6ed3b9;
+    padding: 15px;
+    text-align: center;
+    color: white;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.content {
+    padding: 20px;
+}
+
+/* 고객 카드 컴팩트화 */
+.customerCard {
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #fafafa;
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.vipBadge {
+    color: #6ed3b9;
+    font-weight: bold;
+    border: 1px solid #6ed3b9;
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.customerName {
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.customerName small {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.cardBottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.dottedLine { flex: 1; border-bottom: 1px dotted #ccc; }
+
+/* 커스텀 Select 스타일 */
+.section {
+    position: relative;
+}
+
+.label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.selectTrigger {
+    border: 1px solid #6ed3b9;
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* 직원 리스트 애니메이션/배치 */
+.staffList {
+    margin-top: 5px;
+    border: 1px solid #6ed3b9;
+    border-radius: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.staffItem {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    gap: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0fcf9;
+}
+
+.staffItem:hover {
+    background-color: #f0fcf9;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #6ed3b9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.staffInfo { font-size: 0.85rem; color: #444; }
+.waiting { color: #6ed3b9; font-weight: bold; margin-left: 5px; }
+
+/* 하단 버튼 */
+.footer {
+    padding: 0 20px 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.footer button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btnClose {
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #666;
+}
+
+.btnSubmit {
+    background: #6ed3b9;
+    border: none;
+    color: white;
+}

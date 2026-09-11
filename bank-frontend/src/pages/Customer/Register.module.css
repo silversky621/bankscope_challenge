@@ -1,0 +1,449 @@
+/* Base structure from LoginContent.module.css */
+.pageContainer {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.backgroundWrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.backgroundWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.9);
+    object-position: center;
+}
+
+.registerCard {
+    display: flex;
+    width: 910px;
+    height: 640px;
+    background-color: transparent;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    margin-top: -50px;
+}
+
+/* Left Pane (Form) */
+.leftPane {
+    flex: 1;
+    padding: 30px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #ffffff;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
+}
+
+/* Right Pane (Image) */
+.rightPane {
+    flex: 1;
+    background-color: #e0f2f1;
+    position: relative;
+    overflow: hidden;
+}
+
+.rightPane img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.header {
+    margin-top: 30px;
+    margin-bottom: 10px ;
+    text-align: center;
+}
+
+.header h1 {
+    color: #009A83;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.inputGroup {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.inputGroup label:not(.segmentOption label) {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+.inputGroup input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 0.11rem solid #009A83;
+    border-radius: 1px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #505050;
+    outline: none;
+    transition: all 0.3s ease;
+    height: 45px;
+}
+
+.inputGroup input::placeholder {
+    color: #818181;
+}
+
+.inputGroup input:focus {
+    border-color: #009A83;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 154, 131, 0.3);
+}
+
+.inputGroup input:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+.inputSign {
+    margin-top: 25px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.inputSign label:not(.segmentOption label) {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 500;
+}
+.inputSign label {
+    margin: 0;
+}
+
+.inputSign input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 0.11rem solid #009A83;
+    border-radius: 1px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #505050;
+    outline: none;
+    transition: all 0.3s ease;
+    height: 45px;
+}
+
+.inputSign input::placeholder {
+    color: #818181;
+}
+
+.inputSign input:focus {
+    border-color: #009A83;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 154, 131, 0.3);
+}
+
+.inputSign input:disabled {
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+
+/* --- 회원 유형 세그먼트 버튼 --- */
+.typeSelectionGroup {
+    margin-bottom: 20px;
+}
+
+.segmentedControl {
+    display: flex;
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 45px;
+    box-sizing: border-box;
+    border: 1px solid #009A83;
+}
+
+.segmentOption {
+    flex: 1;
+    display: flex;
+}
+
+.segmentOption input[type="radio"] {
+    display: none;
+}
+
+.segmentOption label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 1rem;
+    color: #fff;
+    background-color: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0;
+}
+
+.segmentOption input[type="radio"]:checked + label {
+    background-color: #009A83;
+    color: white;
+    font-weight: bold;
+}
+
+/* --- Email Verification --- */
+.emailContainer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.emailContainer input {
+    flex-grow: 1;
+}
+
+.emailButton {
+    padding: 10px 15px;
+    background-color: #009A83;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    height: 45px;
+}
+
+.emailButton:disabled {
+    background-color: #a5a5a5;
+    color: #686868;
+    cursor: not-allowed;
+}
+
+.timer {
+    color: #00ffc3;
+    font-weight: bold;
+    margin: 0 10px;
+}
+
+/* --- Split Input Fields --- */
+.splitInput {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.splitInput input {
+    text-align: center;
+}
+
+.splitInput span {
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+/* --- Step Buttons --- */
+.stepButtons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.submitButton:hover {
+    background-color: #007c69;
+}
+.submitButton:active {
+    transform: scale(0.98);
+}
+.submitButton {
+    width: 50%;
+    padding: 16px;
+    background-color: #009A83;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+.submitButton:hover {
+    background-color: #007c69;
+}
+.submitButton:active {
+    transform: scale(0.98);
+}
+.previousButton {
+    width: 50%;
+    padding: 16px;
+    background-color: #6c757d;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+.previousButton:hover {
+    background-color: #5a6268;
+
+}
+.prevButton {
+    flex: 1;
+    padding: 16px;
+    background-color: #6c757d;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.prevButton:hover {
+    background-color: #5a6268;
+}
+.nextButton {
+    width: 100%;
+    padding: 16px;
+    background-color: #009A83;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 10px;
+}
+.nextButton:hover {
+    background-color: #007c69;
+}
+.nextButton:active {
+    transform: scale(0.98);
+}
+.stepButtons .submitButton .nextButton {
+    flex: 1;
+}
+.registerButton {
+    flex: 1;
+    width: 100%;
+    padding: 16px;
+    background-color: #009A83;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.registerButton:hover {
+    background-color: #007c69;
+
+}
+.registerButton:active {
+    transform: scale(0.98);
+
+}
+/* --- Footer Link --- */
+.loginLink {
+    margin-top: 5px;
+
+    padding-top: 10px;
+    font-size: 0.95rem;
+}
+
+.loginLink span {
+    color: #ffffff;
+}
+
+.loginLink a {
+    color: #eaeaea;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.loginLink a:hover {
+    color: #009A83;
+    text-decoration: underline;
+}
+/* 체크박스 영역 */
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    accent-color: #009A83;
+    cursor: pointer;
+}
+
+.checkboxGroup label {
+    font-size: 0.9rem;
+    color: #fff;
+    cursor: pointer;
+    margin: 0;
+}
+
+
+/* Responsive */
+@media (max-width: 900px) {
+    .registerCard {
+        width: 90%;
+        height: auto;
+        flex-direction: column;
+        margin-top: 0;
+    }
+
+    .rightPane {
+        display: none;
+    }
+
+    .leftPane {
+        border-radius: 15px;
+    }
+}

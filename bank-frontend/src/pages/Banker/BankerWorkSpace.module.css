@@ -1,0 +1,1399 @@
+/* 기본 컨테이너 */
+.container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    position: relative;
+}
+
+.backgroundImage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* 추가된 글래스모피즘 래퍼 */
+.glassWrapper {
+    width: 96%;
+    height: 94vh;
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    min-width: 1300px;
+}
+
+/* 우측 상단 윈도우 컨트롤 & 테마 */
+.topControls {
+    position: absolute;
+    top: 4.5px;
+    right: 40px; 
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+}
+
+.themeToggle {
+    background: #e0f0eb;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 3px 6px;
+    width: 60px;
+    position: relative;
+    cursor: pointer;
+}
+
+.sunIcon {
+    font-size: 14px;
+    z-index: 2;
+}
+
+.toggleKnob {
+    position: absolute;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.windowBtns {
+    display: flex;
+    gap: 8px;
+}
+
+.winBtn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+/* --- 연령대 분석 영역 --- */
+.ageGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ageItem {
+    background: #f0f0f0;
+    color: #888;
+    padding: 8px 0;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* 60대 강조 부분 */
+.ageActive {
+    background: #e6f7f5;
+    color: #35987c;
+    border: 1px solid #35987c;
+}
+
+.ageDescription {
+    font-size: 11px;
+    color: #35987c;
+    line-height: 1.4;
+    padding: 8px;
+    background: #e6f7f5;
+    border-radius: 5px;
+}
+.btnClose { background-color: #ff5f56; color: #6a0000; }
+.btnMinimize { background-color: #ffbd2e; color: #8a6a00; }
+.btnMaximize {
+    background-color: #27c93f; color: #005a00; font-size: 14px;
+    rotate: 135deg;
+}
+
+/* 💡 기존 워크스페이스 래퍼 (안쪽 흰색 박스) */
+.workspaceWrapper {
+    width: 95%; 
+    height: 90%;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-right: 30px; 
+}
+
+/* --- 상단 헤더 및 알림 배너 --- */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; 
+    padding: 20px 30px;
+    border-bottom: 1px solid #e0e0e0;
+
+}
+
+.logo {
+    color: #35987c;
+    margin: 0;
+    font-size: 28px;
+}
+
+.headerRightContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.statusSelect {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.userInfo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: bold;
+}
+
+.headerBtn {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.headerBtn:hover {
+    background: #eaeaea;
+}
+
+/* 💡 3. 노란색 알림 배너 */
+.notificationBanner {
+    position: absolute;
+    background-color: #f7d77b;
+    color: #ffffff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+    margin-left: 20px;
+    z-index: 1000;
+    cursor: pointer;
+    right: 35rem;
+}
+
+/* 💡 4. 우측 돋보기 슬라이더 */
+.zoomSidebar {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.zoomTrack {
+    width: 25px;
+    height: 60%;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 20px;
+    position: relative;
+}
+
+.zoomHandle {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    background: #5abcb0;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 0;
+    color: white;
+    cursor: grab;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.zoomPlus {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.zoomText {
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+
+
+/* --- 메인 바디 --- */
+.contentBody {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* --- 좌측 고객 대기열 (Sidebar) --- */
+.leftSidebar {
+    width: 280px;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.sidebarHeader {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.waitingCount {
+    color: #35987c;
+    margin-left: 10px;
+}
+
+.customerList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* 고객 카드 UI */
+.customerCard {
+    border: 1px solid #c9e4de;
+    border-radius: 12px;
+    padding: 15px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.customerCard:hover, .activeCard {
+    border-color: #35987c;
+    box-shadow: 0 4px 12px rgba(53, 152, 124, 0.15);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.customerName {
+    font-size: 18px;
+    font-weight: bold;
+}
+.customerName small {
+    font-size: 12px;
+    color: #777;
+}
+
+.tierBadge {
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+.VIP { background-color: #35987c; }
+.일반 { background-color: #a3d9cf; }
+.우수 { background-color: #5abcb0; }
+
+.cardInfo {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.taskLine {
+    flex: 1;
+    border-top: 1px dashed #ccc;
+    margin: 0 10px;
+}
+
+.riskBarContainer {
+    display: flex;
+    align-items: center;
+    background: #f0f0f0;
+    border-radius: 10px;
+    height: 18px;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.riskBar {
+    background: #35987c;
+    height: 100%;
+    border-radius: 10px;
+    color: white;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+}
+
+.riskText {
+    position: absolute;
+    right: 10px;
+    font-size: 11px;
+    color: #777;
+}
+
+
+.btnComplete { background: #35987c; color: white; }
+
+/* --- 중앙 및 우측 메인 콘텐츠 --- */
+.mainContent {
+    flex: 1;
+    background: #fdfdfd;
+    display: flex;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* 1. 아무것도 선택 안된 대기 화면 (두 번째 사진) */
+.welcomeScreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #e2f1ed;
+    border-radius: 20px;
+    margin: 20px;
+    background: #fff;
+}
+
+.welcomeScreen h2 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.bigLogo {
+    font-size: 80px;
+    color: #35987c;
+    margin: 0;
+}
+
+/* 2. 상세 화면 (세 번째 사진) */
+.detailScreen {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+    min-width: 0;
+    min-height: 0;
+}
+
+.detailMain {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #35987c;
+    margin-bottom: 20px;
+}
+
+.detailCustomerInfo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.detailCustomerInfo h2 { margin: 0; }
+.customerId { color: #555; }
+.detailRisk { font-size: 20px; }
+.detailRisk strong { color: #35987c; font-size: 24px; }
+
+
+/* 상세 계좌 카드 */
+.accountList {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;   
+    overflow-x: hidden;
+    display: block;      
+    background: #fff;
+    border-radius: 10px;
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+}
+
+
+.accountCard {
+    border: 1px solid #c9e4de;
+    background: #f4faf9;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.accountHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.accountHeader h3 { margin: 0; font-size: 20px; }
+.tagGreen, .tagBlue, .tagDark {
+    padding: 4px 10px;
+    border-radius: 5px;
+    color: white;
+    font-size: 12px;
+}
+.tagGreen { background: #35987c; }
+.tagBlue { background: #5abcb0; }
+.tagDark { background: #4a5568; }
+
+/* 상세 화면 우측 사이드바 */
+.rightSidebar {
+    width: 200px;
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem ;
+    max-height: calc(100% - 0.5rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #b7d9d0 transparent;
+}
+
+.rightSidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.rightSidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.rightSidebar::-webkit-scrollbar-thumb {
+    background-color: #b7d9d0;
+    border-radius: 999px;
+}
+
+.rightSidebar > h4,
+.rightSidebar .ageGrid,
+.rightSidebar .ageDescription {
+    flex-shrink: 0;
+}
+
+.infoBox {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 12px;
+    flex: 0 0 156px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.infoBox h4 {
+    margin: 0 0 8px 0;
+    padding: 0;
+    font-size: 0.8rem;     
+    color: #64748b;         
+    text-align: center;    
+    border: none;           
+    flex-shrink: 0;
+     
+}
+
+
+/* 고객 특이 사항 : 실제 로그가 쌓이고 스크롤되는 영역 */
+.logList {
+    flex: 1;                
+    overflow-y: auto;       
+    padding-right: 8px;     
+    display: flex;
+    flex-direction: column;
+    gap: 12px;              
+}
+
+
+.logItem {
+    padding: 12px;
+    background: #f8fafc;
+    border-left: 4px solid #66cccc; 
+    border-radius: 6px;
+    flex-shrink: 0;        
+}
+
+.logDate {
+    display: block;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.logContent {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.4;
+    margin: 0;
+}
+
+
+.logList::-webkit-scrollbar {
+    width: 5px;
+}
+.logList::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.alertItem {
+    background: #35987c;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.infoBox ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.infoBox ul li {
+    background: #e6f7f5;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.ageAnalysisPlaceholder {
+    background: #e6f7f5;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    color: #35987c;
+    font-weight: bold;
+}
+/* --- 연령대 분석 영역 --- */
+.ageGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.ageItem {
+    background: #f0f0f0;
+    color: #888;
+    padding: 8px 0;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* 60대 강조 부분 */
+.ageActive {
+    background: #e6f7f5;
+    color: #35987c;
+    border: 1px solid #35987c;
+}
+
+.ageDescription {
+    font-size: 11px;
+    color: #35987c;
+    line-height: 1.4;
+    padding: 8px;
+    background: #e6f7f5;
+    border-radius: 5px;
+}
+
+/* 채팅창 모달 */
+.chatModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.chatWindow {
+    width: 420px;
+    height: 500px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chatHeader {
+    background: #f7d77b;
+    padding: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.chatBody {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.customerMsg {
+    align-self: flex-start;
+    background: #f1f3f5;
+    padding: 10px 14px;
+    border-radius: 16px;
+    max-width: 70%;
+    font-size: 14px;
+    position: relative;
+}
+
+
+.bankerMsg {
+    align-self: flex-end;
+    background: #f7d77b;
+    color: #000;
+    padding: 10px 14px;
+    border-radius: 16px;
+    max-width: 70%;
+    font-size: 14px;
+    position: relative;
+}
+
+.chatInput {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-top: 1px solid #ddd;
+}
+
+.chatInput input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+}
+
+.chatCloseBtn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.chatCloseBtn:hover {
+    color: #000;
+    transform: scale(1.1);
+}
+
+.sendBtn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sendBtn:hover {
+    color: #000;
+    transform: scale(1.15);
+}
+
+
+.accountForm{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    padding:10px;
+}
+
+.formGroup{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+
+}
+
+.formGroup label{
+    font-size:13px;
+    font-weight:600;
+    color:#555;
+}
+
+.formGroup input,
+.formGroup select{
+    text-align: center;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid #ddd;
+    font-size:14px;
+}
+
+.formGroup input:focus,
+.formGroup select:focus{
+    outline:none;
+    border-color:#4a90e2;
+}
+
+.accountBtnRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.accountBtnRow button {
+    flex: 1;
+}
+
+.btnCancel{
+    padding:10px;
+    border:none;
+    background:#e0e0e0;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:500;
+}
+
+.btnCreate{
+    padding:10px;
+    border:none;
+    background:#35987c;
+    color:white;;
+    cursor:pointer;
+    font-weight:600;
+    border-radius:12px;
+}
+
+
+
+.btnAccept{
+    padding:8px 12px;
+    border:none;
+    background:#5abcb0;
+    color:white;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    transition:all 0.2s ease;
+}
+
+.btnAccept:hover{
+    background:#36c2cd;
+    transform:translateY(-1px);
+}
+.btnToss {
+    padding:8px 12px;
+    border:none;
+    background: #b5b5b5;
+    color: #ffffff;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    transition:all 0.2s ease;
+}
+.btnToss:hover {
+    background: #8f8f8f;
+    transform:translateY(-1px);
+}
+.cardActions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.cardActions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btnCancelTask {
+    background: #ef4444;
+    color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.btnCancelTask:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.btnStart{
+    padding:8px 12px;
+    border:none;
+    background:#5abcb0;
+    color:white;
+    border-radius:20px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    transition:all 0.2s ease;
+    width: 100%;
+}
+.btnStart:hover {
+    background: #36c2cd;
+    transform: translateY(-1px);
+}
+.backCard {
+    display: flex;
+}
+.backButton {
+    padding: 8px 8px;
+    color: #212121;
+    border-radius: 12px;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:500;
+    transition:all 0.2s ease;
+    width:20%;
+    background-color: #ffff;
+    border : 1px solid #00a884;
+}
+.taskLog {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem 0;
+    position: relative;
+}
+.taskLog  textarea {
+    width: 100%;
+    min-height: 8rem;
+    /*border: none;*/
+    padding: 20px;          
+    box-sizing: border-box;
+    border: 1px solid #00a884;
+    resize: none;
+    border-radius: 0.5rem;
+}
+.taskLog  textarea:focus {
+    outline: none;
+    border: 1px solid #3f9f89;
+
+}
+
+.aiInsightBox {
+    background-color: #ffffff;
+    border: 1.2px solid #2eb086;
+    border-radius: 12px;
+    padding: 8px;
+    margin: 4px 0;
+    flex-shrink: 0;
+}
+
+.aiInsightTitle {
+    color: #256f5b;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-align: center;
+    margin: 0 0 8px 0;
+}
+
+.aiInsightEmpty {
+    padding: 14px 6px;
+    text-align: center;
+    color: #888;
+    font-size: 0.75rem;
+    line-height: 1.35;
+}
+
+.aiPredictionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: #f0faf7;
+    color: #3f5f56;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.aiPredictionRow strong {
+    color: #1d7b5e;
+    font-size: 0.76rem;
+    text-align: right;
+}
+
+.aiReasonList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.aiReasonItem {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
+}
+
+.aiReasonItem:nth-child(1) {
+    background: linear-gradient(135deg, #1d976c 0%, #3fe6ad 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(29, 151, 108, 0.3);
+}
+
+.aiReasonItem:nth-child(2) {
+    background-color: #e0f7f1;
+    color: #1d976c;
+    border: 0.5px solid #b2ebdc;
+}
+
+.aiReasonItem:nth-child(3) {
+    background-color: #f3faf8;
+    color: #666;
+}
+
+.aiReasonItem:hover {
+    filter: brightness(1.05);
+    transform: translateX(2px);
+}
+
+.aiReasonItem:focus-visible {
+    outline: 2px solid #6c7ae0;
+    outline-offset: 2px;
+}
+
+.aiReasonPrimary {
+    background: linear-gradient(135deg, #1d976c 0%, #3fe6ad 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(29, 151, 108, 0.3);
+}
+
+.aiReasonRank {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #6c7ae0;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: 8px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.aiReasonText {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.aiReasonText strong {
+    color: inherit;
+    font-size: inherit;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aiReasonText em {
+    color: inherit;
+    font-style: normal;
+    font-size: 0.68rem;
+    font-weight: 800;
+    opacity: 0.78;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aiReasonText em::before {
+    content: "/ ";
+}
+
+.aiReasonOpen {
+    flex-shrink: 0;
+    align-self: center;
+    color: inherit;
+    font-size: 0.64rem;
+    font-weight: 800;
+    margin-left: 6px;
+    opacity: 0.72;
+}
+
+.aiReasonModal {
+    color: #2f4f47;
+}
+
+.aiReasonModalHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.aiReasonModalHeader h3 {
+    margin: 2px 0 0;
+    padding: 0;
+    border: 0;
+    color: #1f5f4f;
+    font-size: 1.15rem;
+    line-height: 1.3;
+}
+
+.aiReasonModalRank {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #6c7ae0;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.aiReasonModalEyebrow {
+    color: #6a7f79;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.aiReasonModalMeta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin: 16px 0;
+}
+
+.aiReasonModalMeta div {
+    padding: 10px;
+    border: 1px solid #d8ede7;
+    border-radius: 8px;
+    background: #f6faf9;
+}
+
+.aiReasonModalMeta dt {
+    margin-bottom: 5px;
+    color: #6a7f79;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.aiReasonModalMeta dd {
+    margin: 0;
+    color: #255848;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.aiReasonModalSection {
+    padding-top: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.aiReasonModalSection h4 {
+    margin: 0 0 8px;
+    color: #255848;
+    font-size: 0.9rem;
+}
+
+.aiReasonModalSection p {
+    margin: 0;
+    color: #506862;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.aiReasonModalNotice {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+
+.rightSidebar_infoBox_recommend {
+    background-color: white;
+    border: 1.2px solid #2eb086;
+    border-radius: 12px;
+    padding: 6px 8px;
+    margin: 4px 0;
+    flex-shrink: 0;
+}
+
+.rightSidebar_infoBox_recommend_title {
+    color: #268a6a; 
+    font-size: 0.85rem;
+    font-weight: 800; 
+    text-align: center;
+    margin: 0 0 6px 0;
+}
+
+.recommendList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px; 
+}
+
+.recommendItem {
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.2s ease;
+}
+
+
+.recommendItem:nth-child(1) {
+    background: linear-gradient(135deg, #1d976c 0%, #3fe6ad 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(29, 151, 108, 0.3); 
+}
+
+
+.recommendItem:nth-child(2) {
+    background-color: #e0f7f1;
+    color: #1d976c;
+    border: 0.5px solid #b2ebdc;
+}
+
+
+.recommendItem:nth-child(3) {
+    background-color: #f3faf8;
+    color: #666;
+}
+
+
+.recommendIcon {
+    width: 16px;
+    height: 16px;
+    background-color: #6c7ae0;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
+    font-size: 0.6rem;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.recommendItem:hover {
+    filter: brightness(1.05);
+    transform: translateX(2px);
+}
+
+/* 비밀번호 변경 모달 컨테이너 */
+.passwordModalContainer {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.passwordModalHeader {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.passwordModalHeader h3 {
+    margin: 0;
+    color: #333;
+    font-size: 22px;
+}
+
+.passwordModalHeader p {
+    margin: 8px 0 0;
+    color: #777;
+    font-size: 14px;
+}
+
+/* 세련된 인풋 그룹 스타일 */
+.passwordInputGroup {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.passwordInputGroup label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-left: 4px;
+}
+
+.passwordInputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.passwordIcon {
+    position: absolute;
+    left: 14px;
+    color: #999;
+    font-size: 16px;
+}
+
+.passwordInput {
+    width: 100%;
+    padding: 14px 14px 14px 40px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #333;
+    background-color: #fafafa;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.passwordInput:focus {
+    outline: none;
+    border-color: #35987c;
+    background-color: #fff;
+    box-shadow: 0 0 0 4px rgba(53, 152, 124, 0.15);
+}
+
+.passwordInput::placeholder {
+    color: #aaa;
+    font-size: 14px;
+}
+
+/* 에러 상태 스타일 */
+.passwordInput.error {
+    border-color: #ff5f56;
+    background-color: #fffaf9;
+}
+
+.passwordInput.error:focus {
+    box-shadow: 0 0 0 4px rgba(255, 95, 86, 0.15);
+}
+
+.errorMessage {
+    color: #ff5f56;
+    font-size: 12px;
+    margin-top: 4px;
+    margin-left: 4px;
+}
+
+/* 모달 액션 버튼 (CustomModal 사용 시 필요하다면 적용) */
+.passwordModalActions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.none {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+}

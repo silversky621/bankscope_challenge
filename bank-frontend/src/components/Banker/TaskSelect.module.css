@@ -1,0 +1,156 @@
+.container {
+    width: 100%;
+    margin: 0 auto;
+    background-color: #f4faf9;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+
+.header {
+    background-color: #E6FBF5;
+    padding: 15px 30px;
+    border-radius: 8px;
+    text-align: right;
+    margin-bottom: 30px;
+}
+
+.welcomeText {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+}
+
+
+.searchSection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 0.8rem;
+    gap: 8px;
+}
+
+.searchBar {
+    width: 250px; /* 적절한 너비 */
+    border: 2px solid #6ED3B9; /* 민트색 테두리 */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+}
+.searchBar input {
+    background-color:#f4faf9;
+}
+
+.searchIcon {
+    color: #6ED3B9;
+    margin-right: 8px;
+}
+
+.searchInput {
+    border: none;
+    outline: none;
+    width: 100%;
+    text-align: right; /* 텍스트 우측 입력 */
+    font-size: 0.95rem;
+}
+
+.tags {
+    display: flex;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #6ED3B9;
+}
+
+/* 태스크 그리드 (2컬럼) */
+.taskGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2열 배치 */
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.taskCard {
+    border: 1.5px solid #6ED3B9; /* 민트색 테두리 */
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center; /* 수직 중앙 */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    background-color: #ffff;
+}
+.taskCard:hover {
+    background-color: #9eecd6;
+    border: 1.5px solid #57a893; /* 민트색 테두리 */
+    transition: 0.2s linear;
+}
+
+
+.activeCard {
+    /*background-color: #E6FBF5;*/
+}
+
+.iconBox {
+    flex: 1;
+    align-self: center;
+}
+.iconBox img {
+    width: 2.5rem;
+}
+
+.textBox {
+    flex: 3;
+    text-align: right;
+}
+
+.taskTitle {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #333;
+}
+
+.taskSubTitle {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* 페이지네이션 (디자인 수정) */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.pageBtn {
+    width: 35px;
+    height: 35px;
+    border: 1.5px solid #6ED3B9;
+    background: #fff;
+    color: #333;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.activePageBtn {
+    background-color: #E6FBF5;
+}
+
+.disabledBtn {
+    border-color: #ccc;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.dots {
+    color: #6ED3B9;
+    margin: 0 5px;
+    font-weight: bold;
+}

@@ -1,0 +1,14 @@
+package com.bankscope.backend.results;
+
+public enum LoanResult implements Result {
+    SUCCESS,
+    FAILURE,
+    FAILURE_SESSION,
+    FAILURE_UNAUTHORIZED,
+    FAILURE_LOAN_NOT_FOUND,
+    FAILURE_INVALID_ACCOUNT,
+    FAILURE_INSUFFICIENT_BALANCE,
+    FAILURE_ALREADY_COMPLETED,
+    FAILURE_INVALID_AMOUNT,
+    FAILURE_NOT_ALLOWED
+}

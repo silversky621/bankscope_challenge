@@ -1,0 +1,102 @@
+.transferContainer {
+    padding: 25px;
+    background-color: #f4faf9;
+    border-radius: 12px;
+    animation: fadeIn 0.3s ease-in-out;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #343a40;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.inputGroup {
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.inputGroup:focus {
+
+}
+.inputGroup label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid #6ED3B9;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+    outline: none;
+
+}
+
+.balanceInfo {
+    text-align: right;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 8px;
+}
+
+.amountButtons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.amountButtons button {
+    flex-grow: 1;
+    padding: 8px 10px;
+    background-color: #5abcb0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #ffff;
+    transition: background-color 0.2s;
+}
+
+.amountButtons button:hover {
+    background-color: #3ca394;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.buttonRow {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.btnCancel { flex: 1; padding: 10px; background-color: #E2E2E2; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+.btnSubmit { flex: 1; padding: 10px; background-color: #559E89; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }

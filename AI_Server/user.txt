@@ -1,0 +1,52 @@
+(1) {"name":"김민준","email":"test01@test.com","password":"Test1234!","residentNumber":"0001013000001","phone":"010-1001-0001","userType":"customer","grade":"C"}
+
+  (2) {"name":"이서연","email":"test02@test.com","password":"Test1234!","residentNumber":"0202024000002","phone":"010-1001-0002","userType":"customer","grade":"D"}
+
+  (3) {"name":"박지호","email":"test03@test.com","password":"Test1234!","residentNumber":"9803031000003","phone":"010-1001-0003","userType":"customer","grade":"C"}
+
+  (4) {"name":"최수아","email":"test04@test.com","password":"Test1234!","residentNumber":"0104044000004","phone":"010-1001-0004","userType":"customer","grade":"B"}
+
+  (5) {"name":"정태양","email":"test05@test.com","password":"Test1234!","residentNumber":"9905051000005","phone":"010-1001-0005","userType":"customer","grade":"C"}
+
+  (6) {"name":"강동훈","email":"test06@test.com","password":"Test1234!","residentNumber":"9006061000006","phone":"010-1001-0006","userType":"customer","grade":"B"}
+
+  (7) {"name":"윤미래","email":"test07@test.com","password":"Test1234!","residentNumber":"8707072000007","phone":"010-1001-0007","userType":"customer","grade":"A"}
+
+  (8) {"name":"임성준","email":"test08@test.com","password":"Test1234!","residentNumber":"8308081000008","phone":"010-1001-0008","userType":"customer","grade":"B"}
+
+  (9) {"name":"한지은","email":"test09@test.com","password":"Test1234!","residentNumber":"8509092000009","phone":"010-1001-0009","userType":"customer","grade":"B"}
+
+  (10) {"name":"오준혁","email":"test10@test.com","password":"Test1234!","residentNumber":"8910101000010","phone":"010-1001-0010","userType":"customer","grade":"C"}
+
+  (11) {"name":"신영호","email":"test11@test.com","password":"Test1234!","residentNumber":"7011111000011","phone":"010-1001-0011","userType":"customer","grade":"A"}
+
+  (12) {"name":"배미숙","email":"test12@test.com","password":"Test1234!","residentNumber":"6301012000012","phone":"010-1001-0012","userType":"customer","grade":"A"}
+
+  (13) {"name":"조현수","email":"test13@test.com","password":"Test1234!","residentNumber":"6702021000013","phone":"010-1001-0013","userType":"customer","grade":"B"}
+
+  (14) {"name":"노은주","email":"test14@test.com","password":"Test1234!","residentNumber":"6003032000014","phone":"010-1001-0014","userType":"customer","grade":"A"}
+
+  (15) {"name":"문철수","email":"test15@test.com","password":"Test1234!","residentNumber":"5504041000015","phone":"010-1001-0015","userType":"customer","grade":"A"}
+
+  (16) {"name":"(주)한국테크","email":"corp01@test.com","password":"Test1234!","residentNumber":"8112121000016","phone":"02-9001-0001","userType":"corporate","identific
+  ationNumber":"123-81-00001","grade":"A"}
+
+  (17) {"name":"(주)서울상사","email":"corp02@test.com","password":"Test1234!","residentNumber":"7608081000017","phone":"02-9001-0002","userType":"corporate","identific
+  ationNumber":"234-81-00002","grade":"B"}
+
+  (18) {"name":"(주)미래건설","email":"corp03@test.com","password":"Test1234!","residentNumber":"7806061000018","phone":"02-9001-0003","userType":"corporate","identific
+  ationNumber":"345-81-00003","grade":"A"}
+
+  (19) {"name":"(주)글로벌통상","email":"corp04@test.com","password":"Test1234!","residentNumber":"7404041000019","phone":"02-9001-0004","userType":"corporate","identif
+  icationNumber":"456-81-00004","grade":"B"}
+
+  (20) {"name":"(주)동방기업","email":"corp05@test.com","password":"Test1234!","residentNumber":"6602021000020","phone":"02-9001-0005","userType":"corporate","identific
+  ationNumber":"567-81-00005","grade":"C"}
+
+  (21) {"name":"(주)테스트","email":"corp06@test.com","password":"Test1234!","residentNumber":"7002021000021","phone":"02-9001-0213","userType":"corporate","identificationNumber":"527-82-00004","isTermsAgreed":1}
+
+  (22) 김적금, savings01@test.com, 비밀번호 1234, 주민번호 970315-2000001, 적금계좌( 340-9001-0001 / 잔액 1,800,000원 )
+
+  (23) 관리자, admin@admin.com, 비밀번호 1234
+
+  (24) member의 모든 행원들, 비밀번호 1234

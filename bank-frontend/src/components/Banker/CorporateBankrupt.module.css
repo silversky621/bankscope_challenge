@@ -1,0 +1,150 @@
+.container {
+    width: 100%;
+    background-color: #F0FAF8;
+    box-sizing: border-box;
+}
+
+.header {
+    background-color: #F0FAF8;
+    padding: 12px 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.headerTitle { font-weight: 600; font-size: 1rem; color: #333; margin: 0; }
+
+.riskBadge {
+    background-color: #fee2e2;
+    color: #ef4444;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    position: absolute;
+    right: 20px;
+}
+/* 등급별 색상 */
+.riskE { background-color: #fee2e2; color: #ef4444; } /* 빨강 */
+.riskD { background-color: #ffedd5; color: #f97316; } /* 주황 */
+.riskC { background-color: #fef9c3; color: #ca8a04; } /* 노랑 */
+.riskB { background-color: #d3ffe1; color: #22c55e; } /* 초록 */
+.riskA { background-color: #d3ffe1; color: #22c55e; } /* 초록 */
+
+.riskDefault { background-color: #f3f4f6; color: #6b7280; } /* 회색 */
+
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    padding: 10px;
+    background-color: #F0FAF8;
+    border-radius: 8px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* 라벨 배치 */
+.labelRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.centerLabel {
+    flex: 1;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+/* 입력 행 정렬 */
+.inputRow {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+/* 껍데기 박스 디자인 (민트 테두리) */
+.customSelectFull {
+    border: 1px solid #6ED3B9;
+    border-radius: 12px;
+    padding: 0 15px;
+    background: #fff;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+/* 내부 입력 태그 스타일 죽이기 (기능만 남기기) */
+.inputField, .selectField {
+    border: none !important;
+    background: transparent !important;
+    outline: none !important;
+    width: 100%;
+    height: 100%;
+    font-size: 0.95rem;
+    color: #333;
+    padding: 0;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.textareaBox {
+    border: 1px solid #6ED3B9;
+    border-radius: 12px;
+    padding: 15px;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.textareaField {
+    width: 100%;
+    height: 120px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 0.95rem;
+    color: #333;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* 2단 그리드 */
+.gridTwo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 하단 버튼 (buttonRow) */
+.buttonRow { display: flex; gap: 15px; margin-top: 10px; }
+.btnCancel { flex: 1; padding: 10px; background-color: #E2E2E2; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; color: #333; transition: all 0.2s; }
+.btnSubmit { flex: 1; padding: 10px; background-color: #5abcb0; color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+
+.btnCancel:hover {
+    background-color: #d5d5d5;
+}
+
+.btnSubmit:hover {
+    background-color: #599a92;
+}

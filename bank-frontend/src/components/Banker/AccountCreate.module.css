@@ -1,0 +1,123 @@
+.accountForm {
+    max-width: 600px; /* 약간 넓혀서 가로 배치 공간 확보 */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px 20px;
+}
+
+.accountForm h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.formRow {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    width: 100%;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1; /* 가로 공간을 균등하게 차지하도록 설정 */
+}
+
+.formGroup label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    padding-left: 5px;
+}
+
+.formGroup input,
+.formGroup select {
+    border: 1.5px solid #6ED3B9;
+    border-radius: 12px;
+    padding: 0 15px;
+    background: #fff;
+    min-height: 48px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    width: 100%; /* input, select가 formGroup 내에서 100% 차지하도록 */
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: #35987c;
+}
+
+.formGroup select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+}
+
+.infoBox {
+    background: linear-gradient(135deg, #f0fdf9 0%, #e6f7f5 100%);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1.5px solid #b8e6d5;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #333;
+}
+
+.infoBox strong {
+    color: #35987c;
+    font-weight: 600;
+}
+
+.accountBtnRow {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.accountBtnRow button {
+    flex: 1;
+    min-height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btnCancel {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.btnCancel:hover {
+    background: #e8e8e8;
+}
+
+.btnCreate {
+    background: #35987c;
+    color: white;
+}
+
+.btnCreate:hover {
+    background: #2d7f68;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(53, 152, 124, 0.3);
+}
+
+.btnCreate:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}

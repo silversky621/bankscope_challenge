@@ -1,0 +1,200 @@
+.userContainer {
+    padding: 10px 20px;        
+    display: flex;             
+    flex-direction: column;   
+    box-sizing: border-box;
+    width: 100%;
+    background-color: #fff;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 15px 0;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;  
+    text-align: left;
+}
+
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    border-top: none;
+    padding-top: 0px;
+    padding-bottom: 10px;
+}
+
+.searchWrapper {
+    position: relative;
+    width: 400px;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 8px 10px 8px 35px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+.actionBtns {
+    display: flex;
+    gap: 8px;
+}
+
+.roleSelect {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0 10px;
+    background-color: #f9f9f9;
+}
+
+.deleteBtn {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.addBtn {
+    background-color: #0000ff;
+    color: white;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.userTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    table-layout: fixed;
+}
+
+.userTable thead th {
+    background-color: #e6f7f4; 
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+}
+
+.userTable tbody td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.userTable tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.activeRow {
+    background-color: #f0f7ff !important; 
+    outline: 2px solid #0056b3; 
+    outline-offset: -2px;
+}
+
+.activeRow td {
+    color: #0056b3;
+}
+
+.statusBadge {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.active {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.editBtn {
+    background-color: #888;
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* 삭제 모달 내부 스타일 */
+.deleteInfoBox {
+    padding: 10px 20px;
+    text-align: left; 
+}
+
+.infoRow {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.infoLabel {
+    width: 80px; 
+    font-weight: bold;
+    color: #333;
+    text-align: left;
+}
+
+.infoValue {
+    color: #555;
+    padding-left: 10px;
+}
+
+.warningText {
+    margin-top: 20px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6; 
+    text-align: left;
+}
+
+.emptyMessage {
+    padding: 50px;
+    color: #888;
+    text-align: center;
+}
+
+.nullText {
+    color: #a6a6a6;
+}
+
+.alertText {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.email {
+    /* 1. 말줄임표를 위한 필수 3요소 */
+    white-space: nowrap;        /* 줄바꿈 방지 (한 줄로 표시) */
+    overflow: hidden;           /* 영역을 벗어난 텍스트 숨김 */
+    text-overflow: ellipsis;    /* 숨겨진 텍스트를 ... 으로 표시 */
+
+    /* 2. td 태그에서 작동하기 위한 기준 너비 (필수) */
+    max-width: 150px;           /* 원하는 픽셀이나 % 값으로 조절하세요 */
+}

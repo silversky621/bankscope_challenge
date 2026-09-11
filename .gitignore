@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Backend build output
+bank-backend/target/
+bank-backend/runtime-logs/
+bank-frontend/runtime-logs/
+runtime-logs/
+*.log
+
+# Frontend dependencies and build output
+bank-frontend/node_modules/
+bank-frontend/dist/
+
+# Python virtualenvs and caches
+AI_Server/.venv/
+AI_Server/venv/
+AI_Server/__pycache__/
+AI_Server/**/*.pyc

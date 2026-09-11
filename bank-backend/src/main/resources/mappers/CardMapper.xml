@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.CardMapper">
+
+    <insert id="insertCard" useGeneratedKeys="true" keyColumn="card_id" keyProperty="cardId">
+        INSERT INTO `bank`.`card` (
+        user_id, account_id, card_name, card_number, card_type, cvc, status, valid_thru,
+        credit_limit, used_amount, payment_day,card_color,issued_at
+        )
+        VALUES (
+        #{card.userId}, #{card.accountId}, #{card.cardName}, #{card.cardNumber}, #{card.cardType},
+        #{card.cvc}, #{card.status}, #{card.validThru},
+        #{card.creditLimit}, #{card.usedAmount}, #{card.paymentDay},#{card.cardColor},IFNULL(#{card.issuedAt}, NOW())
+        )
+    </insert>
+
+    <select id="selectCardsByUserId" resultType="com.bankscope.backend.entities.CardEntity">
+        SELECT card_id AS cardId,
+        user_id AS userId,
+        account_id AS accountId,
+        card_name AS cardName,
+        CONCAT('****-****-****-', RIGHT(REPLACE(card_number, '-', ''), 4)) AS cardNumber,
+        card_type AS cardType,
+        NULL AS cvc,
+        status AS status,
+        valid_thru AS validThru,
+        credit_limit AS creditLimit,
+        used_amount AS usedAmount,
+        payment_day AS paymentDay,
+        card_color AS cardColor,
+        issued_at AS issuedAt
+        FROM `bank`.`card`
+        WHERE user_id = #{userId}
+        ORDER BY issued_at DESC
+    </select>
+
+    <select id="selectCardByIdAndUserId" resultType="com.bankscope.backend.entities.CardEntity">
+        SELECT card_id AS cardId,
+        user_id AS userId,
+        account_id AS accountId,
+        card_name AS cardName,
+        CONCAT('****-****-****-', RIGHT(REPLACE(card_number, '-', ''), 4)) AS cardNumber,
+        card_type AS cardType,
+        NULL AS cvc,
+        status AS status,
+        valid_thru AS validThru,
+        credit_limit AS creditLimit,
+        used_amount AS usedAmount,
+        payment_day AS paymentDay,
+        card_color AS cardColor,
+        issued_at AS issuedAt
+        FROM `bank`.`card`
+        WHERE card_id = #{cardId} AND user_id = #{userId}
+    </select>
+
+    <update id="updateCardStatus">
+        UPDATE `bank`.`card`
+        SET status = #{status}
+        WHERE card_id = #{cardId} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteCard">
+        DELETE FROM `bank`.`card`
+        WHERE card_id = #{cardId} AND user_id = #{userId}
+    </delete>
+
+</mapper>

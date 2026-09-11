@@ -1,0 +1,81 @@
+.footer {
+    background-color: #2D433D;
+    color: #CFD8D7;
+    padding: 10px 0;
+    width: 100%;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    z-index: 10;
+}
+
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box; /*패딩이 너비에 영향을 주지 않도록 설정*/
+}
+
+/* 각 섹션 공통 */
+.container p {
+    margin: 1px 0;
+}
+
+/* 왼쪽 섹션 */
+.sectionLeft {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap; /*텍스트 강제 줄바꿈 방지*/
+}
+
+.brandName {
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+/* 중간 섹션 */
+.sectionCenter {
+    flex: 1;
+    text-align: center;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+/* 오른쪽 섹션 */
+.sectionRight {
+    flex: 1;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.notice {
+    margin-bottom: 15px !important;
+    font-size: 0.65rem;
+    opacity: 0.7;
+    text-align: right;
+    word-break: keep-all; /*단어 단위로 줄바꿈 가독성 유지*/
+}
+
+.copyright {
+    font-weight: bold;
+    color: #ffffff;
+    /* font-size: 0.75rem; */
+}
+
+/* 반응형: 화면이 좁아지면 세로로 배치 */
+@media (max-width: 1024px) {
+    .container {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    .sectionLeft, .sectionCenter, .sectionRight {
+        text-align: center;
+        align-items: center;
+    }
+}

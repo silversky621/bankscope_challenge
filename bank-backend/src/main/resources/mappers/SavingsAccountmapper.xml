@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.SavingsAccountMapper">
+
+    <insert id="insertSavingsAccount">
+        INSERT INTO `bank`.`savings_account`
+        (account_id, linked_account_id, installment_amount, term_months, payment_day, maturity_date)
+        VALUES
+            (#{accountId}, #{linkedAccountId}, #{installmentAmount}, #{termMonths}, #{paymentDay}, #{maturityDate})
+    </insert>
+
+    <select id="selectSavingsAccountById" resultType="com.bankscope.backend.entities.SavingsAccountEntity">
+        SELECT
+            account_id AS accountId,
+            linked_account_id AS linkedAccountId,
+            installment_amount AS installmentAmount,
+            term_months AS termMonths,
+            payment_day AS paymentDay,
+            maturity_date AS maturityDate
+        FROM `bank`.`savings_account`
+        WHERE account_id = #{accountId}
+    </select>
+
+    <select id="findSchedulesToProcess" resultType="com.bankscope.backend.entities.SavingsScheduleEntity">
+        SELECT
+            schedule_id AS scheduleId,
+            account_id AS accountId,
+            due_date AS dueDate,
+            installment_amount AS installmentAmount,
+            status,
+            paid_at AS paidAt
+        FROM `bank`.`savings_schedule`
+        WHERE status = 'PENDING'
+          AND due_date &lt;= #{today}
+    </select>
+</mapper>

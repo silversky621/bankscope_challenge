@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.LoanScheduleMapper">
+    <select id="findPendingSchedulesByLoanId" resultType="LoanScheduleEntity">
+        SELECT
+        schedule_id AS scheduleId,
+        loan_id AS loanId,
+        due_date AS dueDate,
+        repay_amount AS repayAmount,
+        status,
+        paid_at AS paidAt,
+        created_at AS createdAt
+        FROM  `bank`.`loan_schedule`
+        WHERE loan_id = #{loanId}
+        AND status IN ('OVERDUE', 'SCHEDULED')
+        ORDER BY due_date ASC
+    </select>
+
+    <select id="findSchedulesByLoanIdAndStatus" resultType="LoanScheduleEntity">
+        SELECT
+            schedule_id AS scheduleId,
+            loan_id AS loanId,
+            due_date AS dueDate,
+            repay_amount AS repayAmount,
+            status,
+            paid_at AS paidAt,
+            created_at AS createdAt
+        FROM `bank`.`loan_schedule`
+        WHERE loan_id = #{loanId} AND status = #{status}
+        ORDER BY due_date ASC
+    </select>
+
+    <update id="updateScheduleStatus">
+        UPDATE `bank`.`loan_schedule`
+        SET status = #{status}, paid_at = #{paidAt}
+        WHERE schedule_id = #{scheduleId}
+    </update>
+
+    <insert id="insertLoanSchedules" parameterType="java.util.List">
+        INSERT INTO `bank`.`loan_schedule` (loan_id, due_date, repay_amount, status)
+        VALUES
+        <foreach collection="schedules" item="schedule" separator=",">
+            (#{schedule.loanId}, #{schedule.dueDate}, #{schedule.repayAmount}, 'SCHEDULED')
+        </foreach>
+    </insert>
+
+    <select id="findSchedulesFromDate" resultType="LoanScheduleEntity">
+        SELECT
+        schedule_id AS scheduleId,
+        loan_id AS loanId,
+        due_date AS dueDate,
+        repay_amount AS repayAmount,
+        status,
+        paid_at AS paidAt,
+        created_at AS createdAt
+        FROM `bank`.`loan_schedule`
+        WHERE loan_id = #{loanId}
+        AND due_date >= #{startDate}  ORDER BY due_date ASC
+    </select>
+
+    <select id="findSchedulesToMarkOverdue" resultType="LoanScheduleEntity">
+        SELECT
+        schedule_id AS scheduleId,
+        loan_id AS loanId,
+        due_date AS dueDate,
+        repay_amount AS repayAmount,
+        status
+        FROM `bank`.`loan_schedule`
+        WHERE status = 'SCHEDULED'
+        AND due_date &lt; #{today} </select>
+
+    <update id="markScheduleAsOverdue">
+        UPDATE `bank`.`loan_schedule`
+        SET status = 'OVERDUE'
+        WHERE schedule_id = #{scheduleId}
+    </update>
+
+    <update id="cancelFutureSchedules">
+        UPDATE `bank`.`loan_schedule`
+        SET status = 'CANCELLED'
+        WHERE loan_id = #{loanId}
+        AND status IN ('SCHEDULED', 'OVERDUE')
+    </update>
+
+    <update id="deleteFutureSchedules">
+        UPDATE `bank`.`loan_schedule`
+        SET status = 'CANCELLED'
+        WHERE loan_id = #{loanId}
+        AND status = 'SCHEDULED'
+        AND due_date >= CURDATE()
+    </update>
+</mapper>

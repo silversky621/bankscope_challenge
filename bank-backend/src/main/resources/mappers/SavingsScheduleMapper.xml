@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bankscope.backend.mappers.SavingsScheduleMapper">
+
+    <insert id="insertSavingsSchedules" parameterType="java.util.List">
+        INSERT INTO `bank`.`savings_schedule` (
+        account_id, due_date, installment_amount, status
+        ) VALUES
+        <foreach collection="schedules" item="schedule" separator=",">
+            (#{schedule.accountId}, #{schedule.dueDate}, #{schedule.installmentAmount}, #{schedule.status})
+        </foreach>
+    </insert>
+
+    <select id="findEarliestPendingSchedule" resultType="com.bankscope.backend.entities.SavingsScheduleEntity">
+        SELECT
+            schedule_id AS scheduleId,
+            account_id AS accountId,
+            due_date AS dueDate,
+            installment_amount AS installmentAmount,
+            status
+        FROM `bank`.`savings_schedule`
+        WHERE account_id = #{accountId}
+          AND status = 'PENDING'
+        ORDER BY due_date ASC
+        LIMIT 1
+    </select>
+
+    <update id="updateScheduleStatus">
+        UPDATE `bank`.`savings_schedule`
+        SET
+            status = #{status},
+            paid_at = CASE WHEN #{status} = 'COMPLETED' THEN NOW() ELSE paid_at END
+        WHERE schedule_id = #{scheduleId}
+    </update>
+
+    <select id="findDueSchedules" resultType="com.bankscope.backend.dtos.PendingSavingsDto">
+        SELECT
+            ss.schedule_id AS scheduleId,
+            ss.account_id AS accountId,
+            sa.linked_account_id AS linkedAccountId,
+            ss.installment_amount AS installmentAmount,
+            ss.due_date AS dueDate
+        FROM `bank`.`savings_schedule` ss
+        JOIN `bank`.`savings_account` sa ON ss.account_id = sa.account_id
+        WHERE ss.status = 'PENDING'
+          AND ss.due_date <![CDATA[ <= ]]> #{currentDate}
+        ORDER BY ss.due_date ASC
+    </select>
+</mapper>

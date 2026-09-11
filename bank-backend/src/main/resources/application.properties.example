@@ -1,0 +1,45 @@
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/bank?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=YOUR_DB_PASSWORD
+
+mybatis.mapper-locations=classpath:/mappers/**/*.xml
+
+mybatis.type-aliases-package=com.bankscope.backend.entities
+
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_GMAIL_ADDRESS
+spring.mail.password=YOUR_GMAIL_APP_PASSWORD
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+mybatis.configuration.default-enum-type-handler=org.apache.ibatis.type.EnumTypeHandler
+
+server.forward-headers-strategy=framework
+
+solapi.api.key=YOUR_SOLAPI_KEY
+solapi.api.secret=YOUR_SOLAPI_SECRET
+solapi.from.number=YOUR_PHONE_NUMBER
+
+spring.data.redis.host=localhost
+spring.data.redis.port=6379
+spring.session.store-type=redis
+spring.session.redis.flush-mode=on_save
+spring.session.timeout=2h
+
+# 주민번호 보호 키. AES-GCM 키(정확히 16/24/32바이트) + 블라인드 인덱스용 HMAC 키.
+# V4 Java 마이그레이션이 DB 초기 구성 시 이 값을 읽어 더미 주민번호를 암호화/인덱싱한다.
+# DB가 이미 초기화된 뒤 키를 바꾸면 기존 암호문 복호화가 깨지므로, 키 교체는 별도 재암호화 마이그레이션으로 처리한다.
+# 아래 값은 로컬 데모 기본값이다. 실서비스에서는 환경 변수/시크릿 매니저로 주입한다.
+app.aes.secret-key=demo-aes-key-016
+app.hmac.secret-key=demo-hmac-key-change-me
+
+# Flyway DB 마이그레이션: 앱 기동 시 V1~V5를 순서대로 적용·추적
+# V1 스키마, V2 시드, V3 게시판 시드, V4 주민번호 AES-GCM 재암호화/HMAC 인덱스 구성, V5 혼잡도 데모 이력
+# 빈 DB면 전체 적용, 이미 데이터가 있는 DB면 baseline 처리 후 이후 마이그레이션만 추적·적용
+spring.flyway.enabled=true
+spring.flyway.schemas=bank
+spring.flyway.create-schemas=true
+spring.flyway.baseline-on-migrate=true
+spring.flyway.baseline-version=2

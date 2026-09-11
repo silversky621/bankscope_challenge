@@ -1,0 +1,534 @@
+.pageContainer {
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  background-color: #f4f5f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: 'Pretendard', sans-serif;
+  box-sizing: border-box;
+}
+
+.stepperLayout {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  background-color: #f4f5f6;
+
+}
+
+.sidebar {
+  width: 250px;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sidebar div {
+  margin-left: -15px;
+}
+.sidebarTitle {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 40px;
+}
+.sidebarTitle .subTitle {
+  font-size: 18px;
+  font-weight: 500;
+  color : #919191;
+}
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #ccc;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.stepItem.active {
+  color: #111;
+}
+
+.stepCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}
+
+.stepItem.active .stepCircle {
+  background-color: #4A9C82;
+}
+
+.mainContent {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 24px;
+  padding: 50px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.stepBox {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stepTitle {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.nextBtn {
+  margin-top: auto;
+  background-color: #4A9C82;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.pinActionRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pinActionRow .nextBtn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.pinCancelBtn {
+  flex: 1;
+  background-color: #e5e7eb;
+  color: #374151;
+  border: none;
+  border-radius: 30px;
+  padding: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.accountCard {
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+}
+.accountInfo h4 { margin: 0 0 5px 0; font-size: 18px; display: flex; align-items: center; gap: 8px;}
+.mainBadge { font-size: 11px; background: #4A9C82; color: white; padding: 3px 8px; border-radius: 12px; font-weight: 500; }
+.accountInfo p { margin: 0; font-size: 14px; color: #888;}
+.accountRight { display: flex; align-items: center; gap: 20px; }
+.accountRight span { font-weight: 700; font-size: 18px; }
+.selectBtn { background-color: #81c1af; color: white; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; font-weight: 600;}
+
+.agreementBox {
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 15px;
+  color: #555;
+  cursor: pointer;
+}
+
+.designGrid {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.designItem {
+  flex: 1;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background-color: #f9f9f9;
+}
+.designItem.selected {
+  border-color: #4A9C82;
+  background-color: #f0f7f5;
+}
+.realCardImage {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  object-fit: contain;
+}
+
+.designLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.pwdInput {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 18px 20px;
+  font-size: 16px;
+  outline: none;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+.pwdInput:focus { border-color: #4A9C82; }
+
+.pinModalBackdrop {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* 글로벌 CustomModal(z-index 3000) 바로 아래로 두어, PIN 입력 중 뜨는 알림 모달이 PIN 오버레이 위에 보이도록 함 */
+  z-index: 2999;
+}
+.pinModalContent {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.pinModalContent h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; }
+
+.completeBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  gap: 15px;
+}
+.checkIcon { width: 80px; height: 80px; margin-bottom: 10px; }
+.completeTitle { font-size: 24px; font-weight: 700; margin: 0; }
+.completeDesc { color: #888; font-size: 16px; line-height: 1.5; }
+
+.agreementBox {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  color: #555;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  background-color: #ffffff;
+}
+
+.agreementBox:hover {
+  border-color: #4A9C82;
+}
+
+.agreementBox.agreed {
+  background-color: #f0f2f5;
+  border-color: #e4e6e8;
+  color: #333;
+  font-weight: 600;
+}
+
+.agreedBadge {
+  font-size: 14px;
+  color: #4A9C82;
+  font-weight: 700;
+}
+
+.disabledBtn {
+  background-color: #ccc !important;
+  cursor: not-allowed !important;
+}
+
+.termsContentBox {
+  height: 200px;
+  overflow-y: auto;
+  background: #f9fafa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.pinDisplay {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  margin-top: 10px;
+}
+
+.pinDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.pinDotFilled {
+  background-color: #4A9C82;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.keyBtn {
+  background: #f4f5f6;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.1s;
+}
+
+.keyBtn:active {
+  background: #e0e0e0;
+}
+
+.emptyKey {
+  background: none;
+  pointer-events: none;
+}
+
+.cardListContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.cardListItem {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #eee;
+  padding: 20px 0;
+}
+
+.cardListMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardListLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.cardListImage {
+  width: 60px; /* 카드 이미지 크기 조절 */
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transform: rotate(90deg); /* 💡 보통 세로형 카드 이미지를 가로로 눕혀서 보여줌 */
+}
+
+.cardListText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cardHighlight {
+  color: #d97736; /* 와이어프레임의 오렌지색/브라운 텍스트 */
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #222;
+}
+
+.cardSubtitle {
+  font-size: 13px;
+  color: #888;
+}
+
+.cardListRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.joinBtn {
+  background-color: #6bc0a1; /* 와이어프레임의 민트/그린 버튼 */
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.joinBtn:hover {
+  background-color: #4A9C82;
+}
+
+.moreBtn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 혜택 확장 영역 (아코디언) */
+.expandedBenefits {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f9fafa;
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.expandedBenefits ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #444;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media screen and (max-width: 768px) {
+  .stepperLayout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 0 0 20px 0;
+  }
+
+  .sidebarTitle {
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .stepList {
+    flex-direction: row;
+    justify-content: space-between;
+    /*gap: 10px;*/
+    gap: 35px;
+    padding: 0 10px;
+  }
+
+  .stepItem {
+    flex-direction: column;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .mainContent {
+    padding: 30px 20px;
+    min-height: auto;
+    border-radius: 20px;
+  }
+
+  .stepTitle {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .accountCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px 20px;
+  }
+
+  .accountRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .designGrid {
+    flex-direction: column;
+  }
+
+  .pinModalContent {
+    width: 90%;
+    padding: 30px 20px;
+  }
+
+  .pinDisplay {
+    gap: 10px;
+  }
+
+  .keyBtn {
+    padding: 12px 0;
+    font-size: 18px;
+  }
+}

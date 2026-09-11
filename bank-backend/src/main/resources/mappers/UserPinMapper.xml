@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.UserPinMapper">
+
+    <insert id="insertUserPin">
+        INSERT INTO `bank`.`user_pin` (user_id, pin_hash, fail_count, locked_until, updated_at)
+        VALUES (#{userId}, #{pinHash}, 0, NULL, NOW())
+        ON DUPLICATE KEY UPDATE
+            pin_hash = #{pinHash},
+            fail_count = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+    </insert>
+    <update id="update">
+        UPDATE `bank`.`user_pin`
+        SET pin_hash = #{encodedPin},
+            fail_count = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+    <update id="resetFailCount">
+        UPDATE `bank`.`user_pin`
+        SET fail_count = 0,
+            locked_until = NULL,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+    <update id="recordFailedAttempt">
+        UPDATE `bank`.`user_pin`
+        SET fail_count = #{failCount},
+            locked_until = #{lockedUntil},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+    <delete id="deleteUserPin">
+        DELETE FROM `bank`.`user_pin`
+        WHERE user_id = #{userId}
+    </delete>
+    <select id="getUserPin" resultType="com.bankscope.backend.entities.UserPinEntity">
+        SELECT `user_id` AS `userId`,
+               `pin_hash` AS `pinHash`,
+               `fail_count` AS `failCount`,
+               `locked_until` AS `lockedUntil`,
+               `updated_at` AS `updatedAt`
+        FROM `bank`.`user_pin`
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.AccountMapper">
+
+    <insert id="insertAccount"
+            useGeneratedKeys="true"
+            keyColumn="account_id"
+            keyProperty="accountId">
+        INSERT INTO `bank`.`account`( user_id,
+                                     product_id,
+                                     account_number,
+                                     account_type,
+                                     balance,
+                                     interest_rate,
+                                     maturity_date,
+                                     account_password,
+                                     status,
+                                     password_fail_count,
+                                     account_alias,
+                                     created_at,
+                                     last_transaction_at)
+        VALUES (#{account.userId},
+                #{account.productId},
+                #{account.accountNumber},
+                #{account.accountType},
+                #{account.balance},
+                #{account.interestRate},
+                #{account.maturityDate},
+                #{account.accountPassword},
+                #{account.status},
+                #{account.passwordFailCount},
+                #{account.accountAlias},
+                #{account.createdAt},
+                #{account.lastTransactionAt}
+               )
+    </insert>
+    <insert id="insertDepositAccount">
+        INSERT INTO `bank`.`deposit_account`(account_id, linked_account_id, maturity_treatment)
+        VALUES (
+                #{deposit.accountId},
+                #{deposit.linkedAccountId},
+                #{deposit.maturityTreatment}
+               )
+    </insert>
+
+    <!-- Account 정보와 Financial_Product 정보를 JOIN 하여 AccountVo 매핑 -->
+    <resultMap id="AccountVoMap" type="com.bankscope.backend.vos.AccountVo" autoMapping="true">
+        <id property="accountId" column="account_id" />
+        <result property="userId" column="user_id" />
+        <result property="productId" column="product_id" />
+        <result property="accountNumber" column="account_number" />
+        <result property="accountType" column="account_type" />
+        <result property="balance" column="balance" />
+        <result property="interestRate" column="interest_rate" />
+        <result property="maturityDate" column="maturity_date" />
+        <result property="accountPassword" column="account_password" />
+        <result property="status" column="status" />
+        <result property="passwordFailCount" column="password_fail_count" />
+        <result property="accountAlias" column="account_alias" />
+        <result property="createdAt" column="created_at" />
+        <result property="lastTransactionAt" column="last_transaction_at" />
+        <!-- JOIN 된 Financial Product 정보 -->
+        <result property="productName" column="product_name" />
+        <result property="productCategory" column="product_category" />
+    </resultMap>
+
+    <select id="selectAccountById" resultMap="AccountVoMap">
+        SELECT `t1`.account_id,
+               `t1`.user_id,
+               `t1`.product_id,
+               `t1`.account_number,
+               `t1`.account_type,
+               `t1`.balance,
+               `t1`.interest_rate,
+               `t1`.maturity_date,
+               `t1`.account_password,
+               `t1`.status,
+               `t1`.password_fail_count,
+               `t1`.account_alias,
+               `t1`.created_at,
+               `t1`.last_transaction_at,
+               `t2`.product_name,
+               `t2`.product_category
+        FROM `bank`.`account` `t1`
+        LEFT JOIN `bank`.`financial_product` `t2` ON `t1`.product_id = `t2`.product_id
+        WHERE `t1`.account_id = #{id}
+    </select>
+
+    <select id="selectAccountByAccountNumber" resultMap="AccountVoMap">
+         SELECT `t1`.account_id,
+               `t1`.user_id,
+               `t1`.product_id,
+               `t1`.account_number,
+               `t1`.account_type,
+               `t1`.balance,
+               `t1`.interest_rate,
+               `t1`.maturity_date,
+               `t1`.account_password,
+               `t1`.status,
+               `t1`.password_fail_count,
+               `t1`.account_alias,
+               `t1`.created_at,
+               `t1`.last_transaction_at,
+               `t2`.product_name,
+               `t2`.product_category
+        FROM `bank`.`account` `t1`
+        LEFT JOIN `bank`.`financial_product` `t2` ON `t1`.product_id = `t2`.product_id
+        WHERE `t1`.account_number = #{accountNumber}
+    </select>
+
+    <select id="selectAccountsByUserId" resultMap="AccountVoMap">
+         SELECT `t1`.account_id,
+               `t1`.user_id,
+               `t1`.product_id,
+               `t1`.account_number,
+               `t1`.account_type,
+               `t1`.balance,
+               `t1`.interest_rate,
+               `t1`.maturity_date,
+               `t1`.account_password,
+               `t1`.status,
+               `t1`.password_fail_count,
+               `t1`.account_alias,
+               `t1`.created_at,
+               `t1`.last_transaction_at,
+               `t2`.product_name,
+               `t2`.product_category
+        FROM `bank`.`account` `t1`
+        LEFT JOIN `bank`.`financial_product` `t2` ON `t1`.product_id = `t2`.product_id
+        WHERE `t1`.user_id = #{userId} AND `t1`.`account_type` = 'CHECKING'
+        ORDER BY `t1`.created_at DESC
+    </select>
+
+    <select id="countByAccountNumber" resultType="int">
+        SELECT COUNT(*) FROM `bank`.`account`
+        WHERE account_number = #{accountNumber}
+    </select>
+
+    <update id="updateBalance">
+        UPDATE `bank`.`account`
+        SET balance = #{balance},
+            last_transaction_at = NOW()
+        WHERE account_id = #{accountId}
+    </update>
+
+    <update id="addBalance">
+        UPDATE `bank`.`account`
+        SET balance = balance + #{amount},
+            last_transaction_at = NOW()
+        WHERE account_id = #{accountId}
+    </update>
+
+    <update id="updateAccountPassword">
+        UPDATE `bank`.`account`
+        SET account_password = #{accountPassword}
+        WHERE account_id = #{accountId}
+    </update>
+
+    <select id="findMaturedDepositAccounts" resultType="com.bankscope.backend.entities.AccountEntity">
+        SELECT account_id AS accountId,
+               user_id AS userId,
+               product_id AS productId,
+               account_number AS accountNumber,
+               account_type AS accountType,
+               balance,
+               interest_rate AS interestRate,
+               maturity_date AS maturityDate,
+               status
+        FROM `bank`.`account`
+        WHERE account_type = 'DEPOSIT'
+          AND status = 'ACTIVE'
+          AND DATE(maturity_date) &lt;= #{today}
+    </select>
+
+    <select id="findDepositAccountByAccountId" resultType="com.bankscope.backend.entities.DepositAccountEntity">
+        SELECT account_id AS accountId,
+               linked_account_id AS linkedAccountId,
+               maturity_treatment AS maturityTreatment
+        FROM `bank`.`deposit_account`
+        WHERE account_id = #{accountId}
+    </select>
+
+    <update id="updateAccountStatus">
+        UPDATE `bank`.`account`
+        SET status = #{status},
+            balance = #{balance},
+            last_transaction_at = NOW()
+        WHERE account_id = #{accountId}
+    </update>
+
+    <update id="updateMaturityDateForTest">
+        UPDATE `bank`.`account`
+        SET maturity_date = #{maturityDate}
+        WHERE account_id = #{accountId}
+    </update>
+</mapper>

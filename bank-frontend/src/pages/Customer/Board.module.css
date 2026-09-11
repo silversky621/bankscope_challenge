@@ -1,0 +1,146 @@
+/* 전체 레이아웃 */
+.container {
+    min-height: 100vh;
+    background-color: #F8F9FA;
+    display: flex;
+    justify-content: center;
+    padding: 60px 20px;
+    font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.layoutWrapper {
+    width: 100%;
+    max-width: 1000px;
+    background-color: white;
+    padding: 60px 80px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.pageTitle {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 40px;
+}
+
+/* --- 게시판 목록 (BoardList) 스타일 --- */
+.boardTable {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 2px solid #333;
+}
+
+.boardTable th, .boardTable td {
+    padding: 16px;
+    border-bottom: 1px solid #E0E0E0;
+    text-align: center;
+}
+
+.boardTable th {
+    background-color: #EEF7F6;
+    color: #333;
+    font-weight: 600;
+}
+
+.tableRow {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+    background-color: #F9F9F9;
+}
+
+.colId { width: 10%; color: #666; }
+.colTitle { width: 70%; }
+.colTitleText { text-align: left !important; padding-left: 30px !important; color: #333; font-weight: 500; }
+.colDate { width: 20%; color: #888; }
+.emptyRow { padding: 50px !important; color: #999; }
+
+/* 페이징 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 40px;
+}
+
+.pageBtn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #DDD;
+    background-color: white;
+    color: #555;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pageBtn:hover { border-color: #68A798; color: #68A798; }
+.activePage { background-color: #A4D4C8; color: white; border-color: #A4D4C8; font-weight: bold; }
+
+/* --- 게시판 상세 (BoardDetail) 스타일 --- */
+.detailHeader {
+    border-top: 2px solid #68A798;
+    border-bottom: 1px solid #CCC;
+}
+
+.detailRow {
+    display: flex;
+    border-bottom: 1px solid #EAEAEA;
+}
+
+.detailRow:last-child {
+    border-bottom: none;
+}
+
+.detailLabel {
+    width: 150px;
+    background-color: #EEF7F6;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #333;
+}
+
+.detailValue {
+    flex: 1;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    color: #333;
+}
+
+.detailContent {
+    min-height: 400px;
+    padding: 40px 20px;
+    line-height: 1.8;
+    color: #444;
+    font-size: 16px;
+    border-bottom: 1px solid #CCC;
+    text-align: left;
+}
+
+.btnArea {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.listBtn {
+    background-color: #A4D4C8;
+    color: white;
+    padding: 12px 40px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.listBtn:hover {
+    background-color: #8BC2B4;
+}

@@ -1,0 +1,237 @@
+/* 컴포넌트 메인 컨테이너 */
+.container {
+  max-width: 56rem; /* 896px */
+  margin: 0 auto;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 40px;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+  font-family: sans-serif;
+}
+
+.pageHeader {
+  margin-bottom: 32px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+}
+
+.divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* 기본 정보 섹션 */
+.infoSection {
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 16px;
+}
+
+.infoCard {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profileIconWrapper {
+  margin-bottom: 12px;
+  background-color: #e0fcf6;
+  padding: 12px;
+  border-radius: 50%;
+}
+
+.userInfo {
+  text-align: center;
+}
+
+.welcomeText {
+  font-size: 1.125rem;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.userName {
+  font-weight: 600;
+}
+
+.userEmail {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.025em;
+}
+
+.userRole {
+  background-color: #e0fcf6;
+  color: #00c09a;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* 비밀번호 변경 섹션 */
+.passwordSection {
+  display: flex;
+  justify-content: center;
+}
+
+.passwordWrapper {
+  width: 100%;
+  max-width: 28rem; 
+}
+
+.passwordTitle {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1f2937;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputGroup label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #374151;
+}
+
+.inputGroup input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  padding: 12px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inputGroup input:focus {
+  border-color: #00c09a;
+}
+
+.messageWrapper {
+  height: 16px;
+}
+
+.errorMessage {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #ef4444;
+  margin: 0;
+}
+
+.successMessage {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #00c09a;
+  margin: 0;
+}
+
+.submitBtn {
+  width: 100%;
+  background-color: #00c09a;
+  color: white;
+  font-weight: bold;
+  padding: 14px;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.submitBtn:hover {
+  background-color: #00a884;
+}
+
+.modalConfirmText {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.modalSuccessText {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+/* =========================================
+   레벨별 색상 테마 (CSS 변수 활용 - 초고효율!)
+========================================= */
+
+/* 1. 팔레트 (여기서 색상을 한 번만 정의합니다) */
+:root {
+  /* Lv.1 */
+  --lv1-bg: #f0fdf4;
+  --lv1-point: #166534; /* Text와 Fill이 같은 색을 씀 */
+  
+  /* Lv.2 */
+  --lv2-bg: #dcfce7;
+  --lv2-point: #15803d;
+  
+  /* Lv.3 */
+  --lv3-bg: #bbf7d0;
+  --lv3-point: #166534;
+  
+  /* Lv.4 */
+  --lv4-bg: #86efac;
+  --lv4-point: #065f46;
+  
+  /* Lv.5 */
+  --lv5-bg: #059669;
+  --lv5-point: #1e1e1e;
+}
+
+/* 2. 창구 모니터링 뱃지용 (배경색 + 글자색) */
+.levelBadge1 { background: var(--lv1-bg); color: var(--lv1-point); }
+.levelBadge2 { background: var(--lv2-bg); color: var(--lv2-point); }
+.levelBadge3 { background: var(--lv3-bg); color: var(--lv3-point); }
+.levelBadge4 { background: var(--lv4-bg); color: var(--lv4-point); }
+.levelBadge5 { background: var(--lv5-bg); color: var(--lv5-point); }
+
+/* 3. 글자 색상용 (업무 이름 등) */
+.levelText1 { color: var(--lv1-point); }
+.levelText2 { color: var(--lv2-point); }
+.levelText3 { color: var(--lv3-point); }
+.levelText4 { color: var(--lv4-point); }
+.levelText5 { color: var(--lv5-point); }
+
+/* 4. 차트 막대그래프 채우기용 (배경색) */
+.levelFill1 { background: var(--lv1-point); }
+.levelFill2 { background: var(--lv2-point); }
+.levelFill3 { background: var(--lv3-point); }
+.levelFill4 { background: var(--lv4-point); }
+.levelFill5 { background: var(--lv5-point); }

@@ -1,0 +1,236 @@
+/* 전체 화면 컨테이너 */
+.pageContainer {
+    position: relative; /* fixed -> relative 변경 */
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 배경 이미지 컨테이너 */
+.backgroundWrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* 1. 크기를 정확히 뷰포트에 맞춥니다. */
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.backgroundWrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 4. [중요] 이미지의 질감과 구도를 위해 밝기 조정을 신중하게 합니다. */
+    /* 글래스모피즘 효과를 위해 너무 어둡게 하기보다 미세하게 조정합니다. */
+    /* 배경 이미지가 원래 가지고 있는 분위기를 살리기 위해 값을 조절해 보세요. */
+    filter: brightness(0.9); /* 이전 0.6에서 0.9로 변경. (0.8~1.0 추천) */
+
+    /* 5. 원하시는 대각선 구도를 중앙에 맞춥니다. */
+    object-position: center;
+}
+
+/* 로그인 카드 (중앙 박스) */
+.loginCard {
+    display: flex;
+    width: 900px;
+    height: 640px;
+    background-color: transparent; /* 배경 투명하게 */
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    margin-top: -50px; /* 마진을 음수로 주어 위로 올림 */
+}
+
+/* 왼쪽 이미지 영역 (50%) */
+.leftPane {
+    flex: 1;
+    background-color: #e0f2f1;
+    position: relative;
+    overflow: hidden;
+}
+
+.leftPane img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 오른쪽 폼 영역 (50%) */
+.rightPane {
+    flex: 1;
+
+    padding: 30px 40px;    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #ffffff;
+
+    /* 1. 배경 투명도 조절 (RGBA) */
+    /*background: rgba(31, 35, 41, 0.6);*/
+
+    /* 2. 뒷배경 블러 효과 (글래스모피즘 핵심) */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px); /* 사파리 지원 */
+
+    /* 3. 테두리: 빛이 반사되는 듯한 얇은 선 추가 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    /* 4. 입체감을 위한 은은한 그림자 */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+    /* 5. 모서리 둥글게 (선택 사항이나 권장) */
+    border-right-radius: 15px;
+}
+.header {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.header h1 {
+    color: #009A83;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* 부모 패딩 안에서 꽉 차게 */
+}
+
+.inputGroup {
+    margin-bottom: 18px; /* 입력창 사이 간격 */
+    text-align: left;
+
+}
+
+.inputGroup label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+.inputGroup input {
+    width: 100%; /* 너비를 100%로 유지하여 좌우 균형 유지 */
+    box-sizing: border-box; /* 패딩이 너비에 영향을 주지 않도록 추가 */
+    padding: 12px;
+    border: 0.11rem solid #009A83;
+    border-radius: 1px;
+    font-size: 0.95rem;
+    background-color: #ffffff;
+    color: #505050;
+    outline: none;
+    transition: all 0.3s ease;
+}
+.inputGroup input::placeholder {
+    color: #818181;
+}
+
+.inputGroup input:focus {
+    border-color: #009A83;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(0, 154, 131, 0.3);
+}
+
+/* 체크박스 영역 */
+.checkboxGroup {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    margin-bottom: 25px;
+}
+
+.checkboxGroup input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    accent-color: #009A83;
+    cursor: pointer;
+}
+
+.checkboxGroup label {
+    font-size: 0.9rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* 로그인 버튼 */
+.submitButton {
+    width: 100%;
+    padding: 16px;
+    background-color: #009A83;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+
+}
+
+.submitButton:hover {
+    background-color: #007c69;
+}
+
+.submitButton:active {
+    transform: scale(0.98);
+}
+
+/* 하단 링크 영역 */
+.footerLinks {
+    margin-top: 30px;
+    border-top: 1px solid #e1e1e1;
+    padding-top: 20px;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.linkItem {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.linkItem span {
+    color: #ffffff;
+}
+
+.linkItem a {
+    color: #dddddd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.linkItem a:hover {
+    color: #009A83;
+    text-decoration: underline;
+}
+
+/* 반응형 처리 (태블릿/모바일) */
+@media (max-width: 900px) {
+    .loginCard {
+        width: 90%;
+        height: auto;
+        flex-direction: column;
+        margin-top: 0; /* 모바일에서는 마진 제거 */
+    }
+
+    .leftPane {
+        display: none; /* 모바일에서는 이미지 숨김 */
+    }
+
+    .rightPane {
+        padding: 40px 20px;
+    }
+}

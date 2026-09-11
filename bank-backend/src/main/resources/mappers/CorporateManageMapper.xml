@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.CorporateManageMapper">
+
+    <resultMap id="corporateManageResultMap" type="com.bankscope.backend.entities.CorporateManagementEntity">
+        <id property="corporateManageId" column="corporate_manage_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="loanId" column="loan_id"/>
+        <result property="riskGrade" column="risk_grade"/>
+        <result property="defaultDate" column="default_date"/>
+        <result property="reason" column="reason"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="corporateManageResultMap">
+        SELECT * FROM `bank`.`corporate_management` ORDER BY created_at DESC
+    </select>
+
+    <select id="selectById" resultMap="corporateManageResultMap">
+        SELECT * FROM `bank`.`corporate_management` WHERE corporate_manage_id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.bankscope.backend.entities.CorporateManagementEntity" useGeneratedKeys="true" keyProperty="corporateManageId">
+        INSERT INTO `bank`.`corporate_management` (user_id, loan_id, risk_grade, default_date, reason, description, created_at)
+        VALUES (#{userId}, #{loanId}, #{riskGrade}, #{defaultDate}, #{reason}, #{description}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.bankscope.backend.entities.CorporateManagementEntity">
+        UPDATE `bank`.`corporate_manage`
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="loanId != null">loan_id = #{loanId},</if>
+            <if test="riskGrade != null">risk_grade = #{riskGrade},</if>
+            <if test="defaultDate != null">default_date = #{defaultDate},</if>
+            <if test="reason != null">reason = #{reason},</if>
+            <if test="description != null">description = #{description},</if>
+        </set>
+        WHERE corporate_manage_id = #{corporateManageId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM `bank`.`corporate_manage` WHERE corporate_manage_id = #{id}
+    </delete>
+</mapper>

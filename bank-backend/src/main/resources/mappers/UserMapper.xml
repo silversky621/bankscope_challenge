@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.UserMapper">
+
+    <insert id="insertUser"
+            useGeneratedKeys="true"
+            keyColumn="id"
+            keyProperty="id">
+        INSERT INTO `bank`.`user` (user_type, name, email, password, resident_number, resident_number_enc, identification_number,phone, gender, age,is_terms_agreed)
+        VALUES (
+                IFNULL(#{user.userType} , 'customer'),
+                #{user.name},
+                #{user.email},
+                #{user.password},
+                #{user.residentNumber},
+                #{user.residentNumberEnc},
+                #{user.identificationNumber},
+                #{user.phone},
+                #{user.gender},
+                #{user.age},
+                #{user.isTermsAgreed})
+    </insert>
+    <insert id="insertMember"
+            useGeneratedKeys="true"
+            keyColumn="id"
+            keyProperty="id">
+        INSERT INTO `bank`.`member` (name, email, password,level,auth,team,counter_number,status,join_date,last_login,created_at)
+        VALUES (#{member.name},
+                #{member.email},
+                #{member.password},
+                #{member.level},
+                #{member.auth},
+                #{member.team},
+                #{member.counterNumber},
+                IFNULL(#{member.status}, 0),
+                IFNULL(#{member.joinDate}, NOW()),
+                IFNULL(#{member.lastLogin}, NOW()),
+                IFNULL(#{member.createdAt}, NOW())
+               )
+    </insert>
+    <insert id="insertUnregisteredUser">
+        INSERT INTO `bank`.`user` (user_type, name, email, password, resident_number, resident_number_enc, phone, gender, age,is_terms_agreed)
+        VALUES (
+                   IFNULL(#{user.userType} , 'unregisterCustomer'),
+                   #{user.name},
+                   #{user.email},
+                   #{user.password},
+                   #{user.residentNumber},
+                   #{user.residentNumberEnc},
+                   #{user.phone},
+                   #{user.gender},
+                   #{user.age},
+                   #{user.isTermsAgreed}
+               )
+
+    </insert>
+
+    <update id="updateMember">
+        UPDATE `bank`.`member`
+        <set>
+            <if test="member.name != null and member.name != ''">
+                name = #{member.name},
+            </if>
+            <if test="member.level != null">
+                level = #{member.level},
+            </if>
+            <if test="member.auth != null and member.auth != ''">
+                auth = #{member.auth},
+            </if>
+            <if test="member.team != null and member.team != ''">
+                team = #{member.team},
+            </if>
+            <if test="member.counterNumber != null">
+                counter_number = #{member.counterNumber},
+            </if>
+            <if test="member.status != null">
+                status = #{member.status},
+            </if>
+            <if test="member.password != null and member.password != ''">
+                password = #{member.password},
+            </if>
+        </set>
+        WHERE email = #{member.email}
+    </update>
+    <delete id="deleteMember">
+        DELETE FROM `bank`.`member`
+        WHERE id = #{id}
+    </delete>
+    <select id="selectMembers" resultType="com.bankscope.backend.entities.MemberEntity">
+        SELECT id,
+               email,
+               password,
+               name,
+               level,
+               auth,
+               team,
+               status,
+               counter_number AS counterNumber,
+               join_date AS joinDate,
+               last_login AS lastLogin,
+               created_at AS createdAt
+        FROM `bank`.`member`
+    </select>
+    <select id="selectUserByEmailPasswordAndResidentNumber" resultType="com.bankscope.backend.entities.UserEntity">
+        SELECT `id`  AS `id`,
+               `email` AS `email` ,
+               `password` AS `password`,
+               `resident_number` AS `residentNumber`,
+               `name` AS `name`,
+               `user_type` AS `userType`,
+               `phone` AS `phone`,
+               `grade` AS `grade`,
+               `gender` AS `gender`,
+               `age` AS `age`
+        FROM `bank`.`user`
+        WHERE email = #{email}
+          AND password = #{password}
+          AND resident_number = #{residentNumber}
+        LIMIT 1
+    </select>
+    <select id="selectUserByEmail" resultType="com.bankscope.backend.entities.UserEntity">
+        SELECT `id`  AS `id`,
+               `email` AS `email` ,
+               `password` AS `password`,
+               `resident_number` AS `residentNumber`,
+               `identification_number` AS `identificationNumber`,
+               `name` AS `name`,
+               `user_type` AS `userType`,
+               `phone` AS `phone`,
+               `grade` AS `grade`,
+               `gender` AS `gender`,
+               `age` AS `age`
+        FROM `bank`.`user`
+        WHERE email = #{email}
+        LIMIT 1
+    </select>
+    <select id="selectUserByEmailAndPassword" resultType="com.bankscope.backend.entities.UserEntity">
+        SELECT `email` AS `email` ,
+               `password` AS `password`,
+               `resident_number` AS `residentNumber`,
+               `name` AS `name`,
+               `user_type` AS `userType`,
+               `phone` AS `phone`,
+               `grade` AS `grade`,
+               `gender` AS `gender`,
+               `age` AS `age`
+        FROM `bank`.`user`
+        WHERE email = #{email}
+          AND password = #{password}
+        LIMIT 1
+    </select>
+    <select id="selectUserByResidentNumber" resultType="com.bankscope.backend.entities.UserEntity">
+        SELECT `id`              AS `id`,
+               `email`           AS `email`,
+               `password`        AS `password`,
+               `resident_number` AS `residentNumber`,
+               `identification_number` AS `identificationNumber`,
+               `name`            AS `name`,
+               `user_type`       AS `userType`,
+               `phone` AS `phone`,
+               `grade`           AS `grade`,
+               `gender`          AS `gender`,
+               `age`             AS `age`
+        FROM `bank`.`user`
+        WHERE resident_number = #{residentNumber}
+        LIMIT 1
+    </select>
+    <select id="selectMemberByEmail" resultType="com.bankscope.backend.entities.MemberEntity">
+        SELECT id,
+               email,
+               password,
+               name,
+               level,
+               auth,
+               team,
+               status,
+               counter_number AS counterNumber,
+               join_date AS joinDate,
+               last_login AS lastLogin,
+               created_at AS createdAt
+        FROM `bank`.`member`
+        WHERE email = #{email}
+        LIMIT 1
+    </select>
+    <select id="selectUserById" resultType="com.bankscope.backend.entities.UserEntity">
+        SELECT `id`              AS `id`,
+               `user_type`       AS `userType`,
+               `email`           AS `email`,
+               `password`        AS `password`,
+               `resident_number` AS `residentNumber`,
+               `resident_number_enc` AS `residentNumberEnc`,
+               `identification_number` AS `identificationNumber`,
+               `name`            AS `name`,
+               `user_type`       AS `userType`,
+               `phone` AS `phone`,
+               `grade`           AS `grade`,
+               `gender`          AS `gender`,
+               `age`             AS `age`
+        FROM `bank`.`user`
+        WHERE id = #{id}
+    </select>
+    <update id="updateUnregisteredUserToCustomer">
+        UPDATE `bank`.`user`
+        SET `user_type` = 'customer',
+            `email` = #{user.email},
+            `password` = #{user.password},
+            `phone` = #{user.phone}
+        WHERE `resident_number` = #{user.residentNumber}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE `bank`.`user`
+        SET `password` = #{password}
+        WHERE `email` = #{email}
+    </update>
+
+    <update id="updatePasswordAndName">
+        UPDATE `bank`.`user`
+        SET `password` = #{password},
+            `name` = #{name}
+        WHERE `email` = #{email}
+    </update>
+
+    <insert id="insertEmailToken">
+        INSERT INTO `bank`.`email_tokens` (`email`, `code`, `created_at`, `expires_at`)
+        VALUES (#{token.email}, #{token.code}, #{token.createdAt}, #{token.expiresAt})
+    </insert>
+
+    <select id="selectEmailToken" resultType="com.bankscope.backend.entities.EmailTokenEntity">
+        SELECT `email`       AS `email`,
+               `code`        AS `code`,
+               `is_verified` AS `isVerified`,
+               `is_used`     AS `isUsed`,
+               `created_at`  AS `createdAt`,
+               `expires_at`  AS `expiresAt`
+        FROM `bank`.`email_tokens`
+        WHERE `email` = #{email}
+          AND `code` = #{code}
+        ORDER BY `created_at` DESC
+        LIMIT 1
+    </select>
+
+    <update id="updateEmailTokenAsUsed">
+        UPDATE `bank`.`email_tokens`
+        SET `is_used` = 1, `is_verified` = 1
+        WHERE `email` = #{token.email} AND `code` = #{token.code}
+    </update>
+
+    <update id="updateMemberStatus">
+        UPDATE `bank`.`member`
+        SET status = #{status}
+        WHERE email = #{email}
+    </update>
+    <update id="updateUnregisteredUserToCorporate">
+        UPDATE `bank`.`user`
+        SET `email` = #{user.email},
+            `password` = #{user.password},
+            `phone` = #{user.phone}
+        WHERE `resident_number` = #{user.residentNumber}
+    </update>
+    <update id="updateUserIdentificationNumber">
+        UPDATE `bank`.`user`
+        SET `identification_number` = #{user.identificationNumber},
+             `user_type` = 'corporate'
+        WHERE `resident_number` = #{user.residentNumber}
+    </update>
+</mapper>

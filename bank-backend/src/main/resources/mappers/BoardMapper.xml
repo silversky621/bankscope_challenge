@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bankscope.backend.mappers.BoardMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyColumn="board_id" keyProperty="boardId">
+      INSERT INTO `bank`.`board`   (user_id, board_type, title, content,view_count,created_at,updated_at)
+      VALUES ( #{board.userId},
+              #{board.boardType},
+              #{board.title},
+              #{board.content},
+              #{board.viewCount},
+              #{board.createdAt},
+              #{board.updatedAt}
+             )
+    </insert>
+    <select id="selectById" resultType="com.bankscope.backend.entities.BoardEntity">
+        SELECT `board_id` AS `boardId`,
+               `user_id`  AS `userId`,
+               `board_type` AS `boardType`,
+               `title`  AS `title`,
+               `content` AS `content`,
+               `view_count` AS `viewCount`,
+               `created_at` AS `createdAt`,
+               `updated_at` AS `updatedAt`
+        FROM `bank`.`board`
+        WHERE `board_id` = #{boardId}
+    </select>
+
+    <update id="update">
+        UPDATE `bank`.`board`
+        SET `board_type` = #{board.boardType},
+            `title` = #{board.title},
+            `content` = #{board.content},
+            `view_count` = #{board.viewCount},
+            `updated_at` = #{board.updatedAt}
+        WHERE `board_id` = #{board.boardId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM `bank`.`board`
+        WHERE `board_id` = #{boardId}
+    </delete>
+
+    <select id="selectCountByBoardType" resultType="int">
+        SELECT COUNT(0)
+        FROM `bank`.`board`
+        WHERE `board_type` = #{boardType}
+    </select>
+
+    <select id="selectArticlesByBoardType" resultType="com.bankscope.backend.entities.BoardEntity">
+        SELECT `board_id` AS `boardId`,
+               `user_id`  AS `userId`,
+               `board_type` AS `boardType`,
+               `title`  AS `title`,
+               `content` AS `content`,
+               `view_count` AS `viewCount`,
+               `created_at` AS `createdAt`,
+               `updated_at` AS `updatedAt`
+        FROM `bank`.`board`
+        WHERE `board_type` = #{boardType}
+        ORDER BY `board_id` DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+    <select id="selectFourArticlesByBoardType" resultType="com.bankscope.backend.entities.BoardEntity">
+        SELECT `board_id` AS `boardId`,
+               `user_id`  AS `userId`,
+               `board_type` AS `boardType`,
+               `title`  AS `title`,
+               `content` AS `content`,
+               `view_count` AS `viewCount`,
+               `created_at` AS `createdAt`,
+               `updated_at` AS `updatedAt`
+        FROM `bank`.`board`
+        WHERE `board_type` = #{boardType}
+        ORDER BY `board_id` DESC
+        LIMIT 4;
+    </select>
+</mapper>

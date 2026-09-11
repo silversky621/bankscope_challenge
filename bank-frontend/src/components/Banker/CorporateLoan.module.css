@@ -1,0 +1,355 @@
+.container {
+    background: transparent; 
+    border: none;
+    box-shadow: none;
+    padding: 10px 20px;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.container::-webkit-scrollbar-thumb {
+    background-color: #2eb086; 
+    border-radius: 10px;
+}
+
+.container::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f4f2;
+    margin-bottom: 20px;
+    color: #2eb086;
+    flex-shrink: 0; 
+}
+
+.headerTitle {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.formContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1; 
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.labelRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.inputRow {
+    display: flex;
+    gap: 10px;
+}
+
+.displayBox {
+    flex: 1;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.customSelectMain, .amountFieldBox, .inputFieldBox {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.customSelectMain select, .amountFieldBox input, .inputFieldBox input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.customSelectMain select:focus, .amountFieldBox input:focus, .inputFieldBox input:focus {
+    border-color: #2eb086;
+}
+
+.arrowUp {
+    position: absolute;
+    right: 12px;
+    font-size: 0.7rem;
+    color: #aaa;
+    pointer-events: none;
+}
+
+.unit {
+    position: absolute;
+    right: 12px;
+    color: #666;
+    font-weight: 600;
+}
+
+.gridTwo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.textArea {
+    width: 100%;
+    height: 100px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    font-family: inherit;
+}
+
+.buttonRow {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    padding-bottom: 10px;
+    flex-shrink: 0; 
+}
+
+.btnCancel, .btnSubmit {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.btnCancel {
+    background: #f2f2f2;
+    color: #666;
+}
+
+.btnSubmit {
+    background: #2eb086;
+    color: white;
+}
+
+.btnCancel:hover, .btnSubmit:hover {
+    opacity: 0.9;
+}
+
+/* 새로 추가된 클래스들 */
+.sectionTitle {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.scrollableList {
+    min-height: 150px;
+    max-height: 295px;
+    overflow-y: auto;
+    padding-right: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.scrollableList::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollableList::-webkit-scrollbar-thumb {
+    background-color: #2eb086;
+    border-radius: 10px;
+}
+
+.scrollableList::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+.cardItem {
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease-in-out;
+}
+
+.cardItemSelected {
+    border: 2px solid #2eb086;
+    background-color: #f4fbf9;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.cardTag {
+    background-color: #e9f6f2;
+    color: #2eb086;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.cardRate {
+    font-weight: bold;
+    color: #2eb086;
+}
+
+.cardTitle {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #222;
+}
+
+.cardDesc {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.cardFooter {
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.emptyMessage {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    border: 1px dashed #ddd;
+    border-radius: 8px;
+}
+
+.accountCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.accountLeft {
+    display: flex;
+    align-items: center;
+}
+
+.accountTag {
+    background-color: #f0f0f0;
+    color: #555;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-right: 8px;
+}
+
+.accountDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.accountName {
+    font-weight: bold;
+    color: #333;
+}
+
+.accountNumber {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 4px;
+}
+
+.accountBalance {
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: #111;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inputGroup label {
+    font-size: 0.9rem;
+    color: #444;
+    font-weight: bold;
+}
+/* 부모 요소: relative를 주어 unit이 입력창 안에 갇히도록 설정 */
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* 입력창(input) 및 선택창(select) 공통 스타일 */
+.inputWrapper input,
+.inputWrapper select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+/* 텍스트가 입력될 때 우측에 있는 단위(원, 개월)와 겹치지 않도록 우측 패딩 확보 */
+.inputWrapper input {
+    padding-right: 45px;
+}
+
+/* 포커스 시 테마 색상(초록색 계열)으로 테두리 변경 */
+.inputWrapper input:focus,
+.inputWrapper select:focus {
+    border-color: #2eb086;
+}
+
+/* 단위 텍스트 스타일 (이미 있다면 덮어쓰기) */
+.unit {
+    position: absolute;
+    right: 15px; /* 입력창 우측 안쪽에 배치 */
+    color: #666;
+    font-weight: 600;
+    pointer-events: none; /* 클릭 방해 방지 */
+}
