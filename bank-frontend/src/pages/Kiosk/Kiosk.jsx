@@ -7,8 +7,22 @@ import KioskComplete from './KioskComplete';
 import KioskNonMember from './KioskNonMember';
 import CustomModal from '../../components/common/CustomModal';
 
+// 노약자용 글자 크기 배율 (%) - localStorage에 저장되어 새로고침 후에도 유지
+const FONT_SCALE_STORAGE_KEY = 'kioskFontScale';
+const FONT_SCALE_OPTIONS = [100, 125, 150];
+
+const loadFontScale = () => {
+    try {
+        const saved = Number(localStorage.getItem(FONT_SCALE_STORAGE_KEY));
+        return FONT_SCALE_OPTIONS.includes(saved) ? saved : 100;
+    } catch {
+        return 100;
+    }
+};
+
 const Kiosk = () => {
     const [step, setStep] = useState(1);
+    const [fontScale, setFontScale] = useState(loadFontScale);
     const [formData, setFormData] = useState({
         userId: '',
         ssn: '',
@@ -57,6 +71,14 @@ const Kiosk = () => {
             fetchDashboardData();
         }
     }, [step]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(FONT_SCALE_STORAGE_KEY, String(fontScale));
+        } catch {
+            // 저장 불가 환경(시크릿 모드 등)에서는 무시
+        }
+    }, [fontScale]);
 
     const handleGoHome = () => {
         setFormData({ userId: '', ssn: '', task: '', userName: '', taskType: '' });
@@ -110,8 +132,8 @@ const Kiosk = () => {
                                 <div className={styles.step}></div>
                                 <div className={styles.step}></div>
                             </div>
-                            <h1 className={styles.title}>비교는 빠르게<br/>선택은 안전하게</h1>
-                            <p className={styles.subtitle}>AI 기반 창구 자동배치로 최적의 담당자를<br/>연결해 드립니다.</p>
+                            <h1 className={styles.title}>디지털 소외 없는<br/>금융 서비스</h1>
+                            <p className={styles.subtitle}>누구나 쉬운 스마트 키오스크.<br/> AI 창구 매칭 시스템이 나에게 꼭 맞는 담당자를 찾아드립니다.</p>
                         </div>
                         <div className={styles.infoCards}>
                             <div className={styles.card}><span className={styles.cardTitle}>현재 대기 고객</span><span className={styles.cardValue}>{dashboardData.waitingCount}</span></div>
@@ -119,8 +141,8 @@ const Kiosk = () => {
                             <div className={styles.card}><span className={styles.cardTitle}>운영중인 창구</span><span className={styles.cardValue}>{dashboardData.availableCounter}</span></div>
                         </div>
                         <div className={styles.buttonContainer}>
-                            <button className={styles.startButton} onClick={() => setStep(2)} disabled={dashboardData.availableCounter === 0}>회원 접수 시작하기</button>
-                            <button className={styles.startButton2} onClick={() => setStep(0)} disabled={dashboardData.availableCounter === 0}>비회원 접수 시작하기</button>
+                            <button className={styles.startButton} onClick={() => setStep(2)}>회원 접수 시작하기</button>
+                            <button className={styles.startButton2} onClick={() => setStep(0)}>비회원 접수 시작하기</button>
                         </div>
                     </div>
                 );
@@ -199,10 +221,27 @@ const Kiosk = () => {
     };
 
     return (
-        <div className={styles.kioskContainer}>
+        <div className={styles.kioskContainer} style={{ '--kiosk-font-scale-selected': fontScale / 100 }}>
             <div className={styles.header}>
                 <span className={styles.logo}>BankScope</span>
-                <span className={styles.dateTime}>{getCurrentDateTime()}</span>
+                <div className={styles.headerRight}>
+                    <div className={styles.fontScaleControl} role="group" aria-label="글자 크기 조절">
+                        <span className={styles.fontScaleIcon} aria-hidden="true">가</span>
+                        {FONT_SCALE_OPTIONS.map((scale) => (
+                            <button
+                                key={scale}
+                                type="button"
+                                className={`${styles.fontScaleButton} ${fontScale === scale ? styles.fontScaleActive : ''}`}
+                                aria-pressed={fontScale === scale}
+                                aria-label={`글자 크기 ${scale}%`}
+                                onClick={() => setFontScale(scale)}
+                            >
+                                {scale}%
+                            </button>
+                        ))}
+                    </div>
+                    <span className={styles.dateTime}>{getCurrentDateTime()}</span>
+                </div>
             </div>
             {renderStep()}
             <CustomModal
