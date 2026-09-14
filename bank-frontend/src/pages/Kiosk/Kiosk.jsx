@@ -141,8 +141,8 @@ const Kiosk = () => {
                             <div className={styles.card}><span className={styles.cardTitle}>운영중인 창구</span><span className={styles.cardValue}>{dashboardData.availableCounter}</span></div>
                         </div>
                         <div className={styles.buttonContainer}>
-                            <button className={styles.startButton} onClick={() => setStep(2)}>회원 접수 시작하기</button>
-                            <button className={styles.startButton2} onClick={() => setStep(0)}>비회원 접수 시작하기</button>
+                            <button className={styles.startButton} onClick={() => setStep(2)} disabled={dashboardData.availableCounter === 0}>회원 접수 시작하기</button>
+                            <button className={styles.startButton2} onClick={() => setStep(0)} disabled={dashboardData.availableCounter === 0}>비회원 접수 시작하기</button>
                         </div>
                     </div>
                 );

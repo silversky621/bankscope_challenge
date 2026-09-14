@@ -9,10 +9,12 @@ import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -34,7 +36,7 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
 
         Connection connection = context.getConnection();
         addEncryptedResidentNumberColumn(connection);
-        List<SeedResidentNumber> seedRows = selectSeedResidentNumbers(connection);
+        List<SeedResidentNumber> seedRows = selectSeedResidentNumbers(connection, aesKey, hmacKey);
         if (!seedRows.isEmpty()) {
             updateResidentNumbers(connection, seedRows, aesKey, hmacKey);
         }
@@ -43,27 +45,60 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
     private static void addEncryptedResidentNumberColumn(Connection connection) throws Exception {
         try (Statement statement = connection.createStatement()) {
             statement.execute("ALTER TABLE `bank`.`user` ADD COLUMN `resident_number_enc` VARCHAR(255) NULL AFTER `resident_number`");
-        } catch (java.sql.SQLException e) {
-            // Ignore if column already exists (Duplicate column name)
-            if (e.getErrorCode() != 1060 && !e.getMessage().contains("Duplicate column name")) {
+        } catch (SQLException e) {
+            // MySQL DDL may already have succeeded during an interrupted migration.
+            if (e.getErrorCode() != 1060) {
                 throw e;
             }
         }
     }
 
-    private static List<SeedResidentNumber> selectSeedResidentNumbers(Connection connection) throws Exception {
+    private static List<SeedResidentNumber> selectSeedResidentNumbers(
+            Connection connection, String aesKey, String hmacKey) throws Exception {
         List<SeedResidentNumber> rows = new ArrayList<>();
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT `id`, `resident_number` FROM `bank`.`user`")) {
+             ResultSet resultSet = statement.executeQuery(
+                     "SELECT `id`, `resident_number`, `resident_number_enc` FROM `bank`.`user`")) {
             while (resultSet.next()) {
                 int userId = resultSet.getInt("id");
-                String residentNumber = normalizeResidentNumber(resultSet.getString("resident_number"));
+                String storedResidentNumber = resultSet.getString("resident_number");
+                String residentNumber = normalizeResidentNumber(storedResidentNumber);
                 if (residentNumber != null && residentNumber.matches("\\d{13}")) {
                     rows.add(new SeedResidentNumber(userId, residentNumber));
+                } else {
+                    // Skip only verified AES-GCM/HMAC pairs, never unknown legacy values.
+                    validateMigratedResidentNumber(userId, storedResidentNumber,
+                            resultSet.getString("resident_number_enc"), aesKey, hmacKey);
                 }
             }
         }
         return rows;
+    }
+
+    private static void validateMigratedResidentNumber(
+            int userId, String storedIndex, String encryptedValue, String aesKey, String hmacKey) {
+        try {
+            if (encryptedValue == null || encryptedValue.isBlank()) {
+                throw new IllegalArgumentException("Missing AES-GCM ciphertext.");
+            }
+            byte[] encrypted = Base64.getDecoder().decode(encryptedValue);
+            if (encrypted.length < GCM_IV_LENGTH + GCM_TAG_LENGTH_BITS / 8) {
+                throw new IllegalArgumentException("Incomplete AES-GCM ciphertext.");
+            }
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.DECRYPT_MODE,
+                    new SecretKeySpec(aesKey.getBytes(StandardCharsets.UTF_8), "AES"),
+                    new GCMParameterSpec(GCM_TAG_LENGTH_BITS, encrypted, 0, GCM_IV_LENGTH));
+            String residentNumber = normalizeResidentNumber(new String(
+                    cipher.doFinal(encrypted, GCM_IV_LENGTH, encrypted.length - GCM_IV_LENGTH),
+                    StandardCharsets.UTF_8));
+            if (!residentNumber.matches("\\d{13}") || !blindIndex(residentNumber, hmacKey).equals(storedIndex)) {
+                throw new IllegalArgumentException("Resident number and HMAC index do not match.");
+            }
+        } catch (GeneralSecurityException | IllegalArgumentException e) {
+            throw new IllegalStateException(
+                    "V4 found incomplete or invalid resident number encryption. user id: " + userId, e);
+        }
     }
 
     private static void updateResidentNumbers(
@@ -85,7 +120,7 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
         }
     }
 
-    private static String encrypt(String plainText, String aesKey) throws Exception {
+    private static String encrypt(String plainText, String aesKey) throws GeneralSecurityException {
         byte[] iv = new byte[GCM_IV_LENGTH];
         RANDOM.nextBytes(iv);
 
@@ -100,7 +135,7 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
         return Base64.getEncoder().encodeToString(out);
     }
 
-    private static String blindIndex(String plainText, String hmacKey) throws Exception {
+    private static String blindIndex(String plainText, String hmacKey) throws GeneralSecurityException {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(new SecretKeySpec(hmacKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
         byte[] digest = mac.doFinal(normalizeResidentNumber(plainText).getBytes(StandardCharsets.UTF_8));
@@ -110,8 +145,6 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
     private static String normalizeResidentNumber(String residentNumber) {
         return residentNumber == null ? null : residentNumber.replace("-", "").trim();
     }
-
-
 
     private static void validateAesKey(String aesKey) {
         int byteLength = aesKey.getBytes(StandardCharsets.UTF_8).length;
