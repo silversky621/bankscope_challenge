@@ -43,13 +43,15 @@ public class MemberController {
     @Operation(summary = "업무 상태 변경", description = "특정 업무의 상태를 변경합니다. (WAITING -> IN_PROGRESS -> COMPLETED)")
     @RequestMapping(value = "/task/{taskId}/status", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, Object> updateTaskStatus(@PathVariable Long taskId, @RequestParam String status, HttpSession session) {
+    public Map<String, Object> updateTaskStatus(@PathVariable Long taskId, @RequestParam String status,
+                                               @RequestParam(required = false) String actualTaskDetailType,
+                                               HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         if (session.getAttribute("member") == null) {
             response.put("result", TaskResult.FAILURE_SESSION.name());
             return response;
         }
-        TaskResult result = this.taskService.updateTaskStatus(taskId, status);
+        TaskResult result = this.taskService.updateTaskStatus(SessionAuth.member(session), taskId, status, actualTaskDetailType);
         response.put("result", result.name());
         return response;
     }

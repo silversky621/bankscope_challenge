@@ -70,7 +70,8 @@ const BankerWorkSpace = () => {
         { sender: "banker", text: "네 고객님 무엇을 도와드릴까요?" }
     ]);
     const [isTossModalOpen, setIsTossModalOpen] = useState(false);
-    const [taskToToss, setTaskToToss] = useState(null); // 어떤 업무를 이관할지 저장
+    const [taskToToss, setTaskToToss] = useState(null);
+    const [outcomeMode, setOutcomeMode] = useState('transfer'); // 어떤 업무를 이관할지 저장
 
     const [selectedWorkType, setSelectedWorkType] = useState(null);
     const [lastTaskPage, setLastTaskPage] = useState(1);
@@ -630,7 +631,7 @@ const BankerWorkSpace = () => {
 
                 case 'FAILURE':
                 default:
-                    showAlert(`업무 취소 실패: ${data.result}`);
+                    showAlert(`수락 취소 실패: ${data.result}`);
                     break;
             }
         } catch (error) {
@@ -643,9 +644,9 @@ const BankerWorkSpace = () => {
     const handleCancelAcceptTask = (task) => {
         if (!task?.taskId) return;
         openModal({
-            title: '업무 취소',
-            message: '이 업무를 취소하고 대기열로 되돌리시겠습니까?',
-            confirmText: '업무 취소',
+            title: '수락 취소',
+            message: '업무 수락을 취소하고 대기열로 되돌리시겠습니까? 이미 처리한 거래는 취소되지 않습니다.',
+            confirmText: '수락 취소',
             cancelText: '계속 처리',
             onConfirm: () => performCancelAcceptTask(task)
         });
@@ -739,6 +740,10 @@ const BankerWorkSpace = () => {
 
     // 업무 수락 (WAITING -> IN_PROGRESS)
     const handleAcceptTask = async (task) => {
+        if (!isWorking) {
+            showAlert('근무 상태를 근무중으로 변경한 뒤 업무를 수락해주세요.');
+            return;
+        }
         try {
             const response = await fetch(`/api/member/task/${task.taskId}/status?status=IN_PROGRESS`, {
                 method: 'PATCH',
@@ -760,16 +765,18 @@ const BankerWorkSpace = () => {
                     setTasks(prevTasks => prevTasks.map(t => t.taskId === task.taskId ? updatedTask : t));
                     await fetchTasks();
 
-                    if (!isWorking) {
-                        await handleStatusChange({ target: { value: 'working' } });
-                    }
-
                     break;
                 }
 
                 case 'FAILURE_TASK_IN_PROGRESS':
+                case 'FAILURE_INVALID_STATUS':
+                case 'FAILURE_NOT_ALLOWED':
                     showAlert('이미 다른 담당자가 처리 중인 업무입니다.');
                     await fetchTasks();
+                    break;
+
+                case 'FAILURE_TARGET_UNAVAILABLE':
+                    showAlert('현재 근무 상태나 업무 권한으로 수락할 수 없습니다. 이관 가능한 창구를 확인해주세요.');
                     break;
 
                 case 'FAILURE_SESSION':
@@ -793,50 +800,22 @@ const BankerWorkSpace = () => {
         }
     };
 
-    // 업무 종료 (IN_PROGRESS -> COMPLETED)
-    const handleCompleteTask = async (taskToComplete) => {
+    const handleCompleteTask = (taskToComplete) => {
         const targetTask = taskToComplete || selectedTask;
         if (!targetTask) return;
+        setOutcomeMode('complete');
+        setTaskToToss(targetTask);
+        setIsTossModalOpen(true);
+    };
 
-        try {
-            const response = await fetch(`/api/member/task/${targetTask.taskId}/status?status=COMPLETED`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) {
-                showAlert('서버 오류 발생');
-                return;
-            }
-
-            const data = await response.json();
-
-            switch (data.result) {
-                case 'SUCCESS':
-                    showAlert('업무가 종료되었습니다.', async () => {
-                        setTasks(prevTasks => prevTasks.map(t =>
-                            t.taskId === targetTask.taskId ? { ...t, status: 'COMPLETED' } : t
-                        ));
-                        if (selectedTask?.taskId === targetTask.taskId) {
-                            setSelectedTask(null);
-                            setSelectedWorkType(null);
-                        }
-                        await fetchTasks();
-                    });
-                    break;
-
-                case 'FAILURE_SESSION':
-                    showAlert('로그인 정보가 유효하지 않습니다.');
-                    break;
-
-                default:
-                    showAlert('업무 종료 처리에 실패했습니다.');
-                    break;
-            }
-        } catch (error) {
-            console.error('Error completing task:', error);
-            showAlert('오류가 발생했습니다.');
+    const handleOutcomeSuccess = async (taskId, message) => {
+        if (selectedTask?.taskId === taskId) {
+            setSelectedTask(null);
+            setSelectedWorkType(null);
+            setNote('');
         }
+        await fetchTasks();
+        showAlert(`업무가 ${message}`);
     };
 
     // 대기 중인 업무와 처리 중인 업무 모두 표시
@@ -944,13 +923,15 @@ const BankerWorkSpace = () => {
                                                 {task.status === 'IN_PROGRESS' ? (
                                                     <>
                                                         <button
-                                                            className={styles.btnCancelTask}
+                                                            className={styles.btnToss}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleCancelAcceptTask(task);
+                                                                setOutcomeMode('transfer');
+                                                                setTaskToToss(task);
+                                                                setIsTossModalOpen(true);
                                                             }}
                                                         >
-                                                            업무 취소
+                                                            업무 이관
                                                         </button>
                                                         <button
                                                             className={styles.btnAccept}
@@ -961,6 +942,10 @@ const BankerWorkSpace = () => {
                                                         >
                                                             업무 종료
                                                         </button>
+                                                        <details className={styles.taskMore} onClick={e => e.stopPropagation()}>
+                                                            <summary aria-label="추가 업무 동작">더보기</summary>
+                                                            <button type="button" onClick={() => handleCancelAcceptTask(task)}>수락 취소</button>
+                                                        </details>
                                                     </>
                                                 ) : (
                                                     <>
@@ -977,11 +962,12 @@ const BankerWorkSpace = () => {
                                                             className={styles.btnToss}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
+                                                                setOutcomeMode('transfer');
                                                                 setTaskToToss(task); // 이관할 태스크 저장
                                                                 setIsTossModalOpen(true); // 모달 열기
                                                             }}
                                                         >
-                                                            창구이관
+                                                            업무 이관
                                                         </button>
                                                     </>
                                                 )}
@@ -1022,6 +1008,11 @@ const BankerWorkSpace = () => {
                                             </div>
                                         </div>
                                         <div className={styles.accountList}>
+                                            {selectedTask.predictedTaskDetailType && <p className={styles.taskPurpose}>
+                                                최초 AI 예상: {selectedTask.predictedTaskDetailType}
+                                                {selectedTask.confirmedTaskDetailType && <> · 직원 확인: <strong>{selectedTask.confirmedTaskDetailType}</strong></>}
+                                                {selectedTask.transferCount > 0 && <> · 이관 {selectedTask.transferCount}회</>}
+                                            </p>}
                                             <div className={styles.accountCard}>
                                                 {selectedWorkType === "TASK_SELECT" ? (
                                                     <TaskSelect
@@ -1056,6 +1047,11 @@ const BankerWorkSpace = () => {
                                                             ) : (
                                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
                                                                     <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
+                                                                        <button className={styles.btnToss} onClick={() => {
+                                                                            setOutcomeMode('transfer');
+                                                                            setTaskToToss(selectedTask);
+                                                                            setIsTossModalOpen(true);
+                                                                        }}>업무 이관</button>
                                                                         <button
                                                                             className={styles.btnAccept}
                                                                             onClick={() => handleCompleteTask(selectedTask)}
@@ -1344,7 +1340,7 @@ const BankerWorkSpace = () => {
                                             ) : (
                                                 <>
                                                     <div className={styles.aiPredictionRow}>
-                                                        <span>모델 예측</span>
+                                                        <span>현재 데이터로 재분석</span>
                                                         <strong>{aiInsight.predictedTaskDetailType}</strong>
                                                     </div>
                                                     <div className={styles.aiReasonList}>
@@ -1471,6 +1467,8 @@ const BankerWorkSpace = () => {
             {isTossModalOpen && (
                 <TossModal
                     task={taskToToss}
+                    mode={outcomeMode}
+                    onSuccess={handleOutcomeSuccess}
                     onClose={() => {
                         setIsTossModalOpen(false);
                         setTaskToToss(null);

@@ -26,3 +26,5 @@ AI_Server/.venv/
 AI_Server/venv/
 AI_Server/__pycache__/
 AI_Server/**/*.pyc
+
+*\[jay\].md

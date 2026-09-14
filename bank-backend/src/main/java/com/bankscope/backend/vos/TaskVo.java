@@ -31,6 +31,9 @@ public class TaskVo {
     private String age;
     private String gender;
     private Boolean isAi;
+    private String predictedTaskDetailType;
+    private String confirmedTaskDetailType;
+    private Integer transferCount;
     private Integer counterNumber;
 
 }

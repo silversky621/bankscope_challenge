@@ -1,0 +1,12 @@
+[
+  {"id":"new_individual","description":"거래 이력이 없는 중년 개인 고객의 계좌 개설","features":{"age":52},"actual_task":"입출금 계좌개설"},
+  {"id":"new_corporate","description":"거래 이력이 없는 법인의 계좌 개설","features":{"age":45,"is_corporate":1,"has_business_id":1},"actual_task":"법인계좌 개설"},
+  {"id":"card_waiting_withdrawal","description":"카드를 기다리지만 오늘 방문 목적은 출금","features":{"age":61,"account_count":2,"total_balance":12000000,"has_issuing_card":1,"has_check_card":1,"recent_withdrawal_count":3,"days_since_last_tx":4},"actual_task":"출금"},
+  {"id":"card_and_repayment","description":"카드 대기와 상환 일정이 함께 있으며 실제 목적은 상환","features":{"age":42,"account_count":2,"total_balance":4200000,"has_issuing_card":1,"has_active_loan":1,"has_upcoming_payment":1,"days_since_last_tx":12},"actual_task":"대출 상환"},
+  {"id":"wealthy_password_reset","description":"잔액이 많지만 비밀번호 변경을 원하는 고객","features":{"age":57,"account_count":3,"total_balance":180000000,"max_password_fail_count":5,"days_since_last_tx":2},"actual_task":"통장 비밀번호 변경"},
+  {"id":"overdue_transfer","description":"연체 대출이 있지만 오늘은 이체하러 온 고객","features":{"age":39,"account_count":1,"total_balance":350000,"has_overdue_loan":1,"recent_transfer_count":6,"days_since_last_tx":3},"actual_task":"이체"},
+  {"id":"maturing_savings","description":"만기 임박 적금이 있는 고객의 상품 상담","features":{"age":34,"account_count":2,"total_balance":18000000,"has_savings_sub":1,"savings_near_maturity":1,"days_since_last_tx":10},"actual_task":"금융상품가입"},
+  {"id":"senior_card_collection","description":"고령이라는 이유만으로 연금 업무로 단정할 수 없는 카드 수령","features":{"age":78,"account_count":1,"total_balance":5600000,"has_issuing_card":1,"days_since_last_tx":40},"actual_task":"카드수령"},
+  {"id":"corporate_simple_deposit","description":"법인 고객의 단순 입금","features":{"age":46,"is_corporate":1,"has_business_id":1,"account_count":2,"total_balance":85000000,"recent_deposit_count":8,"days_since_last_tx":1},"actual_task":"입금"},
+  {"id":"corporate_default","description":"고위험 법인의 부도관리 상담","features":{"age":50,"is_corporate":1,"has_business_id":1,"account_count":2,"total_balance":80000,"has_overdue_loan":1,"default_risk_level":3,"days_since_last_tx":14},"actual_task":"부도관리"}
+]

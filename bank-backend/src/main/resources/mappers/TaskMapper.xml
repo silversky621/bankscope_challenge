@@ -82,6 +82,9 @@
                `t1`.`ticket_number` AS `ticketNumber`,
                `t1`.`task_type` AS `taskType`,
                `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
+               `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
+               `t1`.`transfer_count` AS `transferCount`,
                `t1`.`assigned_level` AS `assignedLevel`,
                `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
                `t1`.`status` AS `status`,
@@ -103,6 +106,9 @@
                `t1`.`ticket_number` AS `ticketNumber`,
                `t1`.`task_type` AS `taskType`,
                `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
+               `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
+               `t1`.`transfer_count` AS `transferCount`,
                `t1`.`assigned_level` AS `assignedLevel`,
                `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
                `t1`.`status` AS `status`,
@@ -175,6 +181,9 @@
                `t1`.`ticket_number`        AS `ticketNumber`,
                `t1`.`task_type`            AS `taskType`,
                `t1`.`task_detail_type`     AS `taskDetailType`,
+               `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
+               `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
+               `t1`.`transfer_count` AS `transferCount`,
                `t1`.`assigned_level`       AS `assignedLevel`,
                `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
                `t1`.`status`              AS `status`,
@@ -232,6 +241,9 @@
                `t1`.`ticket_number` AS `ticketNumber`,
                `t1`.`task_type` AS `taskType`,
                `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
+               `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
+               `t1`.`transfer_count` AS `transferCount`,
                `t1`.`assigned_level` AS `assignedLevel`,
                `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
                `t1`.`status` AS `status`,
@@ -310,13 +322,73 @@
         </foreach>
     </update>
 
-    <update id="tossTask">
-        UPDATE `bank`.`task`
-        SET member_id = #{targetMemberId},
-            status = #{status},
-            updated_at = NOW()
-        WHERE task_id = #{taskId}
+    <select id="selectTaskForUpdate" resultType="com.bankscope.backend.entities.TaskEntity">
+        SELECT task_id AS taskId, user_id AS userId, ticket_number AS ticketNumber,
+               task_type AS taskType, task_detail_type AS taskDetailType, assigned_level AS assignedLevel,
+               expected_waiting_time AS expectedWaitingTime, status, member_id AS memberId, ranking,
+               created_at AS createdAt, updated_at AS updatedAt, is_ai AS isAi,
+               predicted_task_detail_type AS predictedTaskDetailType,
+               confirmed_task_detail_type AS confirmedTaskDetailType, confirmed_by AS confirmedBy,
+               confirmed_at AS confirmedAt
+        FROM `bank`.`task` WHERE task_id = #{taskId} FOR UPDATE
+    </select>
+
+    <select id="selectMemberForUpdate" resultType="com.bankscope.backend.entities.MemberEntity">
+        SELECT id, name, level, status, counter_number AS counterNumber
+        FROM `bank`.`member` WHERE id = #{memberId} FOR UPDATE
+    </select>
+
+    <select id="selectTransferCandidates" resultType="map">
+        SELECT m.id, m.name, m.level, m.counter_number AS counterNumber,
+               COALESCE(w.waitingCount, 0) AS waitingCount
+        FROM `bank`.`member` m
+        LEFT JOIN (SELECT member_id, COUNT(*) AS waitingCount FROM `bank`.`task`
+                   WHERE status = 'WAITING' GROUP BY member_id) w ON w.member_id = m.id
+        WHERE m.status = 1 AND m.counter_number > 0 AND m.level >= #{minLevel} AND m.id != #{excludeId}
+        ORDER BY COALESCE(w.waitingCount, 0), m.level, m.id
+    </select>
+
+    <select id="selectQueueBeforeTask" resultType="map">
+        SELECT COUNT(CASE WHEN status = 'WAITING' THEN 1 END) AS waitingCount,
+               COALESCE(SUM(CASE task_type WHEN '빠른 업무' THEN 5 WHEN '상담 업무' THEN 10 ELSE 25 END), 0) AS waitingMinutes
+        FROM `bank`.`task`
+        WHERE member_id = #{task.memberId} AND task_id != #{task.taskId}
+          AND (status = 'IN_PROGRESS' OR (status = 'WAITING' AND
+              (created_at &lt; #{task.createdAt} OR (created_at = #{task.createdAt} AND task_id &lt; #{task.taskId}))))
+    </select>
+
+    <sql id="outcomeAssignments">
+        predicted_task_detail_type = COALESCE(predicted_task_detail_type, CASE WHEN is_ai = 1 THEN task_detail_type END),
+        task_type = #{task.taskType}, task_detail_type = #{task.taskDetailType},
+        assigned_level = #{task.assignedLevel}, status = #{task.status},
+        confirmed_task_detail_type = #{task.confirmedTaskDetailType},
+        confirmed_by = #{task.confirmedBy}, confirmed_at = #{task.confirmedAt}, updated_at = NOW()
+    </sql>
+
+    <update id="updateTaskOutcome">
+        UPDATE `bank`.`task` SET <include refid="outcomeAssignments"/>
+        WHERE task_id = #{task.taskId}
     </update>
+
+    <update id="transferTask">
+        UPDATE `bank`.`task` SET <include refid="outcomeAssignments"/>,
+            member_id = #{task.memberId}, ranking = #{task.ranking},
+            expected_waiting_time = #{task.expectedWaitingTime},
+            transfer_count = transfer_count + 1, last_transferred_at = NOW()
+        WHERE task_id = #{task.taskId}
+    </update>
+
+    <insert id="insertTaskAction">
+        INSERT INTO `bank`.`task_processing_log` (task_id, member_id, action_type, processing_note)
+        VALUES (#{taskId}, #{memberId}, #{action}, #{note})
+    </insert>
+
+    <insert id="insertTransferLog">
+        INSERT INTO `bank`.`task_transfer_log`
+            (task_id, from_member_id, to_member_id, actor_member_id, actor_admin_id,
+             previous_detail_type, actual_detail_type, reason)
+        VALUES (#{taskId}, #{fromId}, #{toId}, #{actorId}, #{adminId}, #{previousDetail}, #{actualDetail}, #{reason})
+    </insert>
 
     <select id="countAvailableMembersByLevel" resultType="int">
         SELECT COUNT(*) FROM `bank`.`member`
@@ -328,6 +400,9 @@
                `t1`.`ticket_number` AS `ticketNumber`,
                `t1`.`task_type` AS `taskType`,
                `t1`.`task_detail_type` AS `taskDetailType`,
+               `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
+               `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
+               `t1`.`transfer_count` AS `transferCount`,
                `t1`.`assigned_level` AS `assignedLevel`,
                `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
                `t1`.`status` AS `status`,

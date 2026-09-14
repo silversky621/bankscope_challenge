@@ -2,6 +2,8 @@ package com.bankscope.backend.controllers;
 
 import com.bankscope.backend.dtos.RiskDto;
 import com.bankscope.backend.dtos.TaskRequestDto;
+import com.bankscope.backend.dtos.TaskTransferRequest;
+import com.bankscope.backend.utils.TaskRouting;
 import com.bankscope.backend.entities.MemberEntity;
 import com.bankscope.backend.entities.UserEntity;
 import com.bankscope.backend.results.CommonResult;
@@ -100,18 +102,27 @@ public class TaskController {
     @Operation(summary = "창구 토스", description = "내가 처리할수 없는 업무 창구 토스하기 , task의 memberId와 WAITING 이나 IN_PROGRESS 상태인 업무를 WAITING으로 전환" )
     @RequestMapping(value = "/toss", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, Object> tossTask(HttpSession session,
-            @RequestParam(value = "taskId") Long taskId, 
-            @RequestParam(value = "targetMemberId") Integer targetMemberId) {
+    public Map<String, Object> tossTask(HttpSession session, @RequestBody TaskTransferRequest request) {
         Map<String, Object> response = new HashMap<>();
         MemberEntity member = (MemberEntity) session.getAttribute("member");
         if (member == null) {
             response.put("result", TaskResult.FAILURE_SESSION.name());
             return response;
         }
-        TaskResult result = this.taskService.tossTask(taskId, targetMemberId);
+        TaskResult result = this.taskService.tossTask(member, request);
         response.put("result", result.name());
         return response;
+    }
+
+    @GetMapping("/task-types")
+    public List<TaskRouting.Route> getTaskTypes() {
+        return TaskRouting.ROUTES;
+    }
+
+    @GetMapping("/transfer-candidates")
+    public List<Map<String, Object>> getTransferCandidates(HttpSession session,
+            @RequestParam Long taskId, @RequestParam String actualTaskDetailType) {
+        return taskService.getTransferCandidates(SessionAuth.member(session), taskId, actualTaskDetailType);
     }
 
     @Operation(summary = "고객 리스크 조회", description = "고객의 대출 및 연체 정보를 기반으로 리스크를 백분율 점수로 조회합니다.")

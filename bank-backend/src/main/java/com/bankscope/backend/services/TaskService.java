@@ -1,6 +1,9 @@
 package com.bankscope.backend.services;
 
 import com.bankscope.backend.dtos.TaskRequestDto;
+import com.bankscope.backend.dtos.TaskTransferRequest;
+import com.bankscope.backend.entities.MemberEntity;
+import com.bankscope.backend.utils.TaskRouting;
 import com.bankscope.backend.entities.TaskEntity;
 import com.bankscope.backend.entities.UserEntity;
 import com.bankscope.backend.enums.TaskStatus;
@@ -16,6 +19,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -110,23 +116,8 @@ public class TaskService {
     }
 
     private int getMinLevelByTaskDetailType(String detailType, int fallback) {
-        if (detailType == null) return fallback;
-        return switch (detailType) {
-            // 빠른 업무 - lv.1
-            case "입금", "출금", "카드수령"                          -> 1;
-            // 빠른 업무 - lv.2
-            case "이체", "체크카드 발급", "통장 비밀번호 변경",
-                 "입출금 계좌개설", "적금", "신용카드 발급", "대출 상환" -> 2;
-            // 상담 - lv.3
-            case "예금", "신용대출", "전세자금대출",
-                 "금융상품가입", "법인카드 발급"                        -> 3;
-            // 상담 - lv.4
-            case "소상공인 대출", "연금신청", "주택담보대출",
-                 "법인계좌 개설", "기업대출", "연체관리"                -> 4;
-            // 기업·특수 - lv.5
-            case "부도관리"                                          -> 5;
-            default                                                  -> fallback;
-        };
+        TaskRouting.Route route = TaskRouting.find(detailType);
+        return route == null ? fallback : route.minLevel();
     }
 
     public List<TaskVo> getTask(Integer userId) {
@@ -205,35 +196,99 @@ public class TaskService {
         if (memberId == null || memberLevel == null) return new ArrayList<>();
         return taskMapper.selectTasksByMemberLevel(memberId, memberLevel);
     }
-    public TaskResult updateTaskStatus(Long taskId, String status) {
-        if (taskId == null || status == null) {
-            return TaskResult.FAILURE;
-        }
-        int result = taskMapper.updateTaskStatus(taskId, status);
-        if (result > 0) {
-            return TaskResult.SUCCESS;
-        }
-        return "IN_PROGRESS".equals(status) ? TaskResult.FAILURE_TASK_IN_PROGRESS : TaskResult.FAILURE;
+    @Transactional
+    public TaskResult updateTaskStatus(MemberEntity actor, Long taskId, String status, String actualDetail) {
+        if (actor == null || actor.getId() == null) return TaskResult.FAILURE_SESSION;
+        if (taskId == null || status == null) return TaskResult.FAILURE;
+        TaskEntity task = taskMapper.selectTaskForUpdate(taskId);
+        if (task == null) return TaskResult.FAILURE;
+        if (!Objects.equals(task.getMemberId(), actor.getId().intValue())) return TaskResult.FAILURE_NOT_ALLOWED;
+        boolean accepting = "IN_PROGRESS".equals(status) && "WAITING".equals(task.getStatus());
+        boolean cancelling = "WAITING".equals(status) && "IN_PROGRESS".equals(task.getStatus());
+        boolean completing = "COMPLETED".equals(status) && "IN_PROGRESS".equals(task.getStatus());
+        if (!accepting && !cancelling && !completing) return TaskResult.FAILURE_INVALID_STATUS;
+        TaskRouting.Route route = TaskRouting.find(completing ? actualDetail : task.getTaskDetailType());
+        if (route == null) return TaskResult.FAILURE_INVALID_TASK_TYPE;
+        if (!cancelling && !canHandle(taskMapper.selectMemberForUpdate(actor.getId().intValue()), route))
+            return TaskResult.FAILURE_TARGET_UNAVAILABLE;
+        task.setStatus(status);
+        if (completing) applyConfirmedTask(task, route, actor.getId().intValue());
+        if (taskMapper.updateTaskOutcome(task) != 1) throw new IllegalStateException("Task update failed");
+        if (taskMapper.insertTaskAction(taskId, actor.getId().intValue(),
+                completing ? "COMPLETE" : accepting ? "START_PROCESSING" : "CANCEL_ACCEPT",
+                completing ? "실제 처리 업무 확인: " + actualDetail : accepting ? "업무 수락" : "수락 취소 (거래 취소 아님)") != 1)
+            throw new IllegalStateException("Task action log failed");
+        return TaskResult.SUCCESS;
     }
 
-    public TaskResult tossTask(Long taskId, Integer targetMemberId) {
-        if (taskId == null || targetMemberId == null) {
-            return TaskResult.FAILURE;
-        }
-        // #TODO 업무를 처리할수 없는 멤버에서 할당 못하게
-        int result = taskMapper.tossTask(taskId, targetMemberId, "WAITING");
-        return result > 0 ? TaskResult.SUCCESS : TaskResult.FAILURE;
+    public List<Map<String, Object>> getTransferCandidates(MemberEntity actor, Long taskId, String detail) {
+        TaskVo task = taskId == null ? null : taskMapper.getTask(taskId);
+        if (actor == null || actor.getId() == null || task == null || !Objects.equals(task.getMemberId(), actor.getId().intValue()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (!List.of("WAITING", "IN_PROGRESS").contains(task.getStatus()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 종료된 업무입니다.");
+        TaskRouting.Route route = TaskRouting.find(detail);
+        if (route == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 업무입니다.");
+        return taskMapper.selectTransferCandidates(route.minLevel(), task.getMemberId());
     }
+
+    @Transactional
+    public TaskResult tossTask(MemberEntity actor, TaskTransferRequest request) {
+        if (actor == null || actor.getId() == null) return TaskResult.FAILURE_SESSION;
+        if (request == null) return TaskResult.FAILURE;
+        return transferTask(request, actor.getId().intValue(), null);
+    }
+
+    @Transactional
     public TaskResult tossTaskByAdmin(UserEntity user, Long taskId, Integer targetMemberId) {
-        if( !user.getUserType().equals("admin")) {
-            return TaskResult.FAILURE_NOT_ALLOWED;
-        }
-        if (taskId == null || targetMemberId == null) {
-            return TaskResult.FAILURE;
-        }
-        int result = taskMapper.tossTask(taskId, targetMemberId, "WAITING");
-        return result > 0 ? TaskResult.SUCCESS : TaskResult.FAILURE;
+        if (user == null || !"admin".equals(user.getUserType())) return TaskResult.FAILURE_NOT_ALLOWED;
+        return transferTask(new TaskTransferRequest(taskId, targetMemberId, null, "관리자 창구 재배정"), null, user.getId());
+    }
 
+    private TaskResult transferTask(TaskTransferRequest request, Integer actorId, Integer adminId) {
+        if (request.taskId() == null || request.targetMemberId() == null) return TaskResult.FAILURE;
+        TaskEntity task = taskMapper.selectTaskForUpdate(request.taskId());
+        if (task == null) return TaskResult.FAILURE;
+        if (adminId == null && !Objects.equals(task.getMemberId(), actorId)) return TaskResult.FAILURE_NOT_ALLOWED;
+        if (!List.of("WAITING", "IN_PROGRESS").contains(task.getStatus())) return TaskResult.FAILURE_INVALID_STATUS;
+        if (Objects.equals(task.getMemberId(), request.targetMemberId())) return TaskResult.FAILURE_TARGET_UNAVAILABLE;
+        String detail = adminId == null ? request.actualTaskDetailType() : task.getTaskDetailType();
+        TaskRouting.Route route = TaskRouting.find(detail);
+        if (route == null) return TaskResult.FAILURE_INVALID_TASK_TYPE;
+        String reason = request.reason() == null ? "" : request.reason().trim();
+        if (reason.isEmpty() || reason.length() > 1000) return TaskResult.FAILURE;
+        // Recheck under a lock: staff may have gone off duty since the list was loaded.
+        MemberEntity target = taskMapper.selectMemberForUpdate(request.targetMemberId());
+        if (!canHandle(target, route)) return TaskResult.FAILURE_TARGET_UNAVAILABLE;
+        Integer previousMember = task.getMemberId();
+        String previousDetail = task.getTaskDetailType();
+        if (adminId == null) applyConfirmedTask(task, route, actorId);
+        task.setMemberId(request.targetMemberId());
+        task.setStatus("WAITING");
+        Map<String, Object> queue = taskMapper.selectQueueBeforeTask(task);
+        task.setRanking(((Number) queue.get("waitingCount")).intValue() + 1);
+        task.setExpectedWaitingTime(((Number) queue.get("waitingMinutes")).intValue());
+        if (taskMapper.transferTask(task) != 1) throw new IllegalStateException("Transfer failed");
+        if (taskMapper.insertTransferLog(task.getTaskId(), previousMember, task.getMemberId(), actorId, adminId,
+                previousDetail, detail, reason) != 1) throw new IllegalStateException("Transfer log failed");
+        if (actorId != null && taskMapper.insertTaskAction(task.getTaskId(), actorId, "TRANSFER",
+                previousDetail + " → " + detail + " / " + target.getName() + "에게 이관 / " + reason) != 1)
+            throw new IllegalStateException("Task action log failed");
+        return TaskResult.SUCCESS;
+    }
+
+    private boolean canHandle(MemberEntity member, TaskRouting.Route route) {
+        return member != null && Integer.valueOf(1).equals(member.getStatus()) && member.getCounterNumber() > 0
+                && member.getLevel() != null && member.getLevel() >= route.minLevel();
+    }
+
+    private void applyConfirmedTask(TaskEntity task, TaskRouting.Route route, Integer actorId) {
+        task.setTaskDetailType(route.detailType());
+        task.setTaskType(route.taskType());
+        task.setAssignedLevel("LEVEL_" + route.minLevel());
+        task.setConfirmedTaskDetailType(route.detailType());
+        task.setConfirmedBy(actorId);
+        task.setConfirmedAt(LocalDateTime.now());
     }
     public TaskVo getTask(Long taskId) {
         return this.taskMapper.getTask(taskId);

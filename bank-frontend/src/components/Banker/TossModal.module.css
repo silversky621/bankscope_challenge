@@ -12,10 +12,11 @@
 }
 
 .modalContainer {
-    width: 440px; /* 크기 축소 */
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
     background: #fff;
     border-radius: 20px;
-    overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
@@ -23,7 +24,7 @@
     background-color: #6ed3b9;
     padding: 15px;
     text-align: center;
-    color: white;
+    color: #163d33;
 }
 
 .header h1 {
@@ -82,7 +83,24 @@
 /* 커스텀 Select 스타일 */
 .section {
     position: relative;
+    margin-bottom: 16px;
 }
+
+.section select, .section textarea {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid #9aafa9;
+    border-radius: 8px;
+    padding: 10px;
+    font: inherit;
+    background: white;
+    color: #243b35;
+}
+.section textarea { resize: vertical; }
+.help { font-size: 0.85rem; color: #52625e; line-height: 1.6; }
+.error { color: #a02020; line-height: 1.5; }
+.customerCard p { font-size: 0.85rem; margin: 8px 0 0; }
+.footer button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .label {
     display: block;
@@ -166,5 +184,5 @@
 .btnSubmit {
     background: #6ed3b9;
     border: none;
-    color: white;
+    color: #163d33;
 }

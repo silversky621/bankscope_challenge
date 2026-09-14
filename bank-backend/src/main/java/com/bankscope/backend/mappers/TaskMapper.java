@@ -2,6 +2,7 @@ package com.bankscope.backend.mappers;
 
 
 import com.bankscope.backend.entities.TaskEntity;
+import com.bankscope.backend.entities.MemberEntity;
 import com.bankscope.backend.vos.CounterStatusVo;
 import com.bankscope.backend.vos.DashboardWaitingVo;
 import com.bankscope.backend.vos.TaskProcessingVo;
@@ -36,7 +37,18 @@ public interface TaskMapper {
     int countAvailableMembersByLevel(@Param("minLevel") int minLevel);
     int selectMemberTotalWaitTime(@Param("memberId") Integer memberId);
     int countWaitingTasksByMemberId(@Param("memberId") Integer memberId);
-    int tossTask(@Param("taskId") Long taskId, @Param("targetMemberId") Integer targetMemberId, @Param("status") String status);
+    TaskEntity selectTaskForUpdate(@Param("taskId") Long taskId);
+    MemberEntity selectMemberForUpdate(@Param("memberId") Integer memberId);
+    List<Map<String, Object>> selectTransferCandidates(@Param("minLevel") int minLevel, @Param("excludeId") Integer excludeId);
+    Map<String, Object> selectQueueBeforeTask(@Param("task") TaskEntity task);
+    int updateTaskOutcome(@Param("task") TaskEntity task);
+    int transferTask(@Param("task") TaskEntity task);
+    int insertTaskAction(@Param("taskId") Long taskId, @Param("memberId") Integer memberId,
+                         @Param("action") String action, @Param("note") String note);
+    int insertTransferLog(@Param("taskId") Long taskId, @Param("fromId") Integer fromId, @Param("toId") Integer toId,
+                          @Param("actorId") Integer actorId, @Param("adminId") Integer adminId,
+                          @Param("previousDetail") String previousDetail, @Param("actualDetail") String actualDetail,
+                          @Param("reason") String reason);
     TaskVo getTask(@Param("taskId") Long taskId);
     int countInProgressTasks();
     @SuppressWarnings("MybatisXMapperMethodInspection")

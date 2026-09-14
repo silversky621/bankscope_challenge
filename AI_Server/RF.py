@@ -1,295 +1,185 @@
-import os
+"""Train and evaluate the PoC on grouped synthetic data. Importing this module never trains."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score, classification_report
-import joblib
-import shap
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import mysql.connector
-from dotenv import load_dotenv
+from sklearn.dummy import DummyClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GroupShuffleSplit, StratifiedGroupKFold, cross_validate
+from sklearn.metrics import accuracy_score, f1_score, classification_report
 
-load_dotenv()
+from task_schema import FEATURE_COLUMNS, TASK_LEVELS, validate_task_frame
 
-# main.py 의 TASK_FEATURE_COLUMNS 와 동일한 순서 유지 (어긋나면 추론 시 예측이 틀어짐)
-FEATURE_COLUMNS = [
-    'age', 'is_corporate', 'gender', 'total_balance', 'account_count',
-    'has_active_loan', 'has_overdue_loan', 'has_upcoming_payment',
-    'has_issuing_card', 'has_check_card', 'has_credit_card',
-    'has_deposit_sub', 'has_savings_sub', 'default_risk_level',
-    'recent_deposit_count', 'recent_withdrawal_count', 'recent_transfer_count',
-    'days_since_last_tx', 'max_password_fail_count', 'has_business_id',
-    'savings_near_maturity', 'deposit_near_maturity',
-]
+ROOT = Path(__file__).resolve().parent
 
-# DB에서 가져올 수 있는 유효한 세부업무 라벨 (이 목록에 없으면 쓰레기 데이터로 간주)
-VALID_LABELS = {
-    '입금', '출금', '카드수령', '이체', '체크카드 발급', '통장 비밀번호 변경',
-    '입출금 계좌개설', '적금', '신용카드 발급', '대출 상환', '예금', '신용대출',
-    '전세자금대출', '금융상품가입', '법인카드 발급', '소상공인 대출', '연금신청',
-    '주택담보대출', '법인계좌 개설', '기업대출', '연체관리', '부도관리',
-}
 
-def load_db_task_data() -> pd.DataFrame | None:
-    """
-    task 테이블의 COMPLETED 업무를 기준으로 실제 고객 피처를 추출한다.
-    유효하지 않은 라벨이나 데이터가 MIN_DB_ROWS 미만이면 None을 반환한다.
-    """
+def load_confirmed_db_data():
+    import os
+    import mysql.connector
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / '.env')
+    connection = mysql.connector.connect(host=os.getenv('DB_HOST', 'localhost'), user=os.getenv('DB_USER', 'root'),
+                                        password=os.getenv('DB_PASSWORD', ''), database=os.getenv('DB_NAME', 'bank'))
+    cursor = connection.cursor(dictionary=True)
     try:
-        conn = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'bank'),
-        )
-        cursor = conn.cursor(dictionary=True)
-
-        # COMPLETED 상태 + 유효 라벨인 task만 대상 (동일 고객의 중복 라벨도 포함)
-        # DCG* ticket은 관리자 혼잡도 UI 확인용 이력이라 모델 학습에서는 제외한다.
-        placeholders = ','.join(['%s'] * len(VALID_LABELS))
-        cursor.execute(
-            f"SELECT user_id, task_detail_type FROM task "
-            f"WHERE status = 'COMPLETED' "
-            f"AND task_detail_type IN ({placeholders}) "
-            f"AND ticket_number NOT LIKE 'DCG%'",
-            list(VALID_LABELS),
-        )
-        tasks = cursor.fetchall()
-
-        if len(tasks) == 0:
-            print("   [SKIP] DB에 유효한 COMPLETED task 없음, CSV만 사용")
-            cursor.close()
-            conn.close()
-            return None
-
-        print(f"   [OK] DB에서 유효 task {len(tasks)}건 발견, 피처 추출 중...")
-
-        rows = []
-        for task in tasks:
-            user_id = task['user_id']
-            label = task['task_detail_type']
-
-            cursor.execute("""
-                SELECT
-                    u.age, u.user_type, u.gender, u.identification_number,
-                    COALESCE((SELECT SUM(a.balance) FROM account a WHERE a.user_id = u.id), 0)
-                        AS total_balance,
-                    COALESCE((SELECT COUNT(*) FROM account a WHERE a.user_id = u.id), 0)
-                        AS account_count,
-                    CASE WHEN EXISTS (SELECT 1 FROM loan l WHERE l.user_id = u.id AND l.status = 'ACTIVE')
-                        THEN 1 ELSE 0 END AS has_active_loan,
-                    CASE WHEN EXISTS (SELECT 1 FROM loan l WHERE l.user_id = u.id AND l.status = 'OVERDUE')
-                        THEN 1 ELSE 0 END AS has_overdue_loan,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM loan_schedule ls
-                        JOIN loan l ON ls.loan_id = l.loan_id
-                        WHERE l.user_id = u.id
-                          AND ls.due_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)
-                          AND ls.status = 'SCHEDULED'
-                    ) THEN 1 ELSE 0 END AS has_upcoming_payment,
-                    CASE WHEN EXISTS (SELECT 1 FROM card c WHERE c.user_id = u.id AND c.status = 'ISSUING')
-                        THEN 1 ELSE 0 END AS has_issuing_card,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM card c WHERE c.user_id = u.id AND c.card_type = 'CHECK' AND c.status = 'ACTIVE'
-                    ) THEN 1 ELSE 0 END AS has_check_card,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM card c WHERE c.user_id = u.id AND c.card_type = 'CREDIT' AND c.status = 'ACTIVE'
-                    ) THEN 1 ELSE 0 END AS has_credit_card,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM product_subscription ps
-                        JOIN financial_product fp ON ps.product_id = fp.product_id
-                        WHERE ps.user_id = u.id AND ps.status = 'ACTIVE' AND fp.product_category = 'DEPOSIT'
-                    ) THEN 1 ELSE 0 END AS has_deposit_sub,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM product_subscription ps
-                        JOIN financial_product fp ON ps.product_id = fp.product_id
-                        WHERE ps.user_id = u.id AND ps.status = 'ACTIVE' AND fp.product_category = 'SAVINGS'
-                    ) THEN 1 ELSE 0 END AS has_savings_sub,
-                    COALESCE((
-                        SELECT CASE cm.risk_grade
-                            WHEN '저위험' THEN 1 WHEN '중위험' THEN 2 WHEN '고위험' THEN 3
-                            ELSE 0 END
-                        FROM corporate_management cm WHERE cm.user_id = u.id LIMIT 1
-                    ), 0) AS default_risk_level,
-                    COALESCE((
-                        SELECT COUNT(*) FROM transaction_history th
-                        JOIN account a ON th.account_id = a.account_id
-                        WHERE a.user_id = u.id AND th.transaction_type = 'DEPOSIT'
-                          AND th.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-                    ), 0) AS recent_deposit_count,
-                    COALESCE((
-                        SELECT COUNT(*) FROM transaction_history th
-                        JOIN account a ON th.account_id = a.account_id
-                        WHERE a.user_id = u.id AND th.transaction_type IN ('WITHDRAW', 'WITHDRAWAL')
-                          AND th.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-                    ), 0) AS recent_withdrawal_count,
-                    COALESCE((
-                        SELECT COUNT(*) FROM transaction_history th
-                        JOIN account a ON th.account_id = a.account_id
-                        WHERE a.user_id = u.id AND th.transaction_type IN ('TRANSFER', 'TRANSFER_OUT', 'TRANSFER_IN')
-                          AND th.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-                    ), 0) AS recent_transfer_count,
-                    COALESCE((
-                        SELECT DATEDIFF(NOW(), MAX(th.created_at)) FROM transaction_history th
-                        JOIN account a ON th.account_id = a.account_id WHERE a.user_id = u.id
-                    ), 999) AS days_since_last_tx,
-                    COALESCE((
-                        SELECT MAX(a.password_fail_count) FROM account a WHERE a.user_id = u.id
-                    ), 0) AS max_password_fail_count,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM savings_account sa
-                        JOIN account a ON sa.account_id = a.account_id
-                        WHERE a.user_id = u.id
-                          AND sa.maturity_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 90 DAY)
-                    ) THEN 1 ELSE 0 END AS savings_near_maturity,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM deposit_account da
-                        JOIN account a ON da.account_id = a.account_id
-                        WHERE a.user_id = u.id
-                          AND a.maturity_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 90 DAY)
-                    ) THEN 1 ELSE 0 END AS deposit_near_maturity
-                FROM user u WHERE u.id = %s
-            """, (user_id,))
-            row = cursor.fetchone()
-            if not row:
-                continue
-
-            age_str = str(row['age']).replace('대', '').replace('세', '').strip()
-            user_type_str = str(row['user_type']).upper() if row['user_type'] else ''
-            is_corporate = 1 if user_type_str in ('CORPORATE', '기업', '법인', 'BUSINESS') else 0
-            gender_str = str(row['gender']).upper() if row['gender'] else ''
-
-            rows.append({
-                'age':                     int(age_str) if age_str.isdigit() else 30,
-                'is_corporate':            is_corporate,
-                'gender':                  1 if gender_str == 'MALE' else 0,
-                'total_balance':           int(row['total_balance']),
-                'account_count':           int(row['account_count']),
-                'has_active_loan':         int(row['has_active_loan']),
-                'has_overdue_loan':        int(row['has_overdue_loan']),
-                'has_upcoming_payment':    int(row['has_upcoming_payment']),
-                'has_issuing_card':        int(row['has_issuing_card']),
-                'has_check_card':          int(row['has_check_card']),
-                'has_credit_card':         int(row['has_credit_card']),
-                'has_deposit_sub':         int(row['has_deposit_sub']),
-                'has_savings_sub':         int(row['has_savings_sub']),
-                'default_risk_level':      int(row['default_risk_level']),
-                'recent_deposit_count':    int(row['recent_deposit_count']),
-                'recent_withdrawal_count': int(row['recent_withdrawal_count']),
-                'recent_transfer_count':   int(row['recent_transfer_count']),
-                'days_since_last_tx':      int(row['days_since_last_tx']),
-                'max_password_fail_count': int(row['max_password_fail_count']),
-                'has_business_id':         1 if (is_corporate == 1 and row['identification_number']) else 0,
-                'savings_near_maturity':   int(row['savings_near_maturity']),
-                'deposit_near_maturity':   int(row['deposit_near_maturity']),
-                'task_detail_type':        label,
-            })
-
+        cursor.execute("""
+            SELECT task_id, user_id, feature_snapshot, confirmed_task_detail_type
+            FROM task WHERE status = 'COMPLETED' AND confirmed_at IS NOT NULL AND confirmed_by IS NOT NULL
+              AND feature_snapshot IS NOT NULL AND feature_snapshot_at <= created_at
+              AND confirmed_at >= feature_snapshot_at AND ticket_number NOT LIKE 'DCG%'
+        """)
+        records = []
+        for row in cursor.fetchall():
+            snapshot = json.loads(row['feature_snapshot'])
+            if snapshot.get('schema_version') != 1:
+                raise ValueError(f"Unsupported snapshot schema on task {row['task_id']}")
+            features = snapshot['features']
+            records.append({**{c: features[c] for c in FEATURE_COLUMNS},
+                            'task_detail_type': row['confirmed_task_detail_type'],
+                            'profile_id': f"confirmed-app-user:{row['user_id']}", 'scenario_kind': 'confirmed_app'})
+        if not records:
+            return pd.DataFrame(columns=FEATURE_COLUMNS + ['task_detail_type', 'profile_id', 'scenario_kind'])
+        result = pd.DataFrame(records)
+        validate_task_frame(result)
+        return result
+    finally:
         cursor.close()
-        conn.close()
-
-        if not rows:
-            print("   [SKIP] 피처 추출 가능한 유효 행 없음")
-            return None
-
-        result_df = pd.DataFrame(rows)
-        print(f"   [OK] 최종 {len(result_df)}건 추출 완료")
-        return result_df
-
-    except Exception as e:
-        print(f"   [WARN] DB 연결/조회 실패, CSV만 사용: {e}")
-        return None
+        connection.close()
 
 
-# ── 1. 학습 데이터 로드 ───────────────────────────────────────────────────────
+def merge_equal_profile_groups(frame):
+    """Keep exact profile matches together even if they came from different sources."""
+    from prepare_datasets import profile_hash
+    frame = frame.copy()
+    parent = {g: g for g in frame.profile_id.unique()}
+    def find(g):
+        while parent[g] != g:
+            parent[g] = parent[parent[g]]
+            g = parent[g]
+        return g
+    seen = {}
+    for _, row in frame.iterrows():
+        key = profile_hash(row)
+        if key in seen:
+            a, b = find(row.profile_id), find(seen[key])
+            parent[max(a, b)] = min(a, b)
+        seen[key] = row.profile_id
+    frame.profile_id = frame.profile_id.map(find)
+    return frame
 
-print("1. 학습 데이터 로드 중...")
-base_df = pd.read_csv('bank_data_1.csv')
-print(f"   CSV: {len(base_df)}건")
 
-print("   DB 실제 task 데이터 병합 시도 중...")
-real_df = load_db_task_data()
+def grouped_split(frame):
+    train, test = next(GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42).split(frame, groups=frame.profile_id))
+    train_frame, test_frame = frame.iloc[train], frame.iloc[test]
+    if set(train_frame.profile_id) & set(test_frame.profile_id):
+        raise ValueError('Profile group leakage')
+    train_values = set(map(tuple, train_frame[FEATURE_COLUMNS].to_numpy()))
+    overlap = sum(tuple(row) in train_values for row in test_frame[FEATURE_COLUMNS].to_numpy())
+    if overlap:
+        raise ValueError(f'{overlap} test profiles also occur in training')
+    if set(train_frame.task_detail_type) != set(TASK_LEVELS):
+        raise ValueError('Training split does not cover every task')
+    return train, test
 
-if real_df is not None:
-    df = pd.concat([base_df, real_df], ignore_index=True)
-    df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-    print(f"   병합 후 총 {len(df)}건 (CSV {len(base_df)} + DB {len(real_df)})")
-else:
-    df = base_df
 
-print(f"\n   클래스 수: {df['task_detail_type'].nunique()}")
-print(f"\n[클래스 분포]")
-print(df['task_detail_type'].value_counts().to_string())
+def metrics(y, predicted):
+    return {'accuracy': float(accuracy_score(y, predicted)),
+            'macro_f1': float(f1_score(y, predicted, average='macro', zero_division=0)),
+            'minimum_level_sufficient_rate': float(np.mean([TASK_LEVELS[p] >= TASK_LEVELS[a] for a, p in zip(y, predicted)]))}
 
-# ── 2. 학습 ──────────────────────────────────────────────────────────────────
 
-X = df[FEATURE_COLUMNS]
-y = df['task_detail_type']
+def stress_evaluation(model, frame):
+    cases = json.loads((ROOT / 'data/stress_scenarios.json').read_text(encoding='utf-8'))
+    dataset_profiles = set(map(tuple, frame[FEATURE_COLUMNS].to_numpy()))
+    result = []
+    for case in cases:
+        features = {c: 0 for c in FEATURE_COLUMNS}
+        features['days_since_last_tx'] = 999
+        features.update(case['features'])
+        sample = pd.DataFrame([features])[FEATURE_COLUMNS]
+        validate_task_frame(sample.assign(task_detail_type=case['actual_task']))
+        if tuple(sample.iloc[0]) in dataset_profiles:
+            raise ValueError(f"Stress case overlaps development data: {case['id']}")
+        prediction = str(model.predict(sample)[0])
+        probabilities = model.predict_proba(sample)[0]
+        result.append({**case, 'prediction': prediction, 'max_vote_fraction': float(probabilities.max()),
+                       'exact_match': prediction == case['actual_task'],
+                       'minimum_level_sufficient': TASK_LEVELS[prediction] >= TASK_LEVELS[case['actual_task']]})
+    return result
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
 
-print("\n2. 랜덤 포레스트 모델 학습 중...")
-model = RandomForestClassifier(
-    n_estimators=300,
-    max_depth=12,
-    min_samples_split=5,
-    class_weight='balanced',
-    random_state=42,
-    n_jobs=-1,
-)
-model.fit(X_train, y_train)
+def train_model(include_confirmed_db=False, make_shap=True):
+    source = ROOT / 'bank_data_1.csv'
+    frame = pd.read_csv(source)
+    validate_task_frame(frame)
+    if 'profile_id' not in frame:
+        raise ValueError('Run prepare_datasets.py first')
+    confirmed_count = 0
+    if include_confirmed_db:
+        confirmed = load_confirmed_db_data()
+        confirmed_count = len(confirmed)
+        if confirmed_count:
+            frame = pd.concat([frame, confirmed], ignore_index=True)
+    frame = merge_equal_profile_groups(frame).drop_duplicates(FEATURE_COLUMNS + ['task_detail_type']).reset_index(drop=True)
+    train, test = grouped_split(frame)
+    x, y = frame[FEATURE_COLUMNS], frame.task_detail_type
+    model = RandomForestClassifier(n_estimators=300, max_depth=12, min_samples_split=5,
+                                   class_weight='balanced', random_state=42, n_jobs=-1)
+    cv = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_validate(model, x.iloc[train], y.iloc[train], groups=frame.profile_id.iloc[train], cv=cv,
+                            scoring={'accuracy': 'accuracy', 'macro_f1': 'f1_macro'}, n_jobs=1)
+    model.fit(x.iloc[train], y.iloc[train])
+    predicted = model.predict(x.iloc[test])
+    report = {'evaluation_scope': 'Synthetic scenario evaluation; not measured real-customer performance.',
+              'dataset_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+              'confirmed_app_rows_requested': confirmed_count,
+              'rows': len(frame), 'train_rows': len(train), 'test_rows': len(test),
+              'test_profile_overlap': 0, 'split': 'GroupShuffleSplit by profile lineage; seed=42',
+              'cv_scope': '5-fold StratifiedGroupKFold on training partition only',
+              'cv_accuracy_mean': float(scores['test_accuracy'].mean()),
+              'cv_macro_f1_mean': float(scores['test_macro_f1'].mean()),
+              'held_out': metrics(y.iloc[test], predicted),
+              'classification_report': classification_report(y.iloc[test], predicted, output_dict=True, zero_division=0),
+              'baselines': {}, 'stress_cases': stress_evaluation(model, frame),
+              'limitations': ['Labels and scenario frequencies are developer assumptions.',
+                              'Minimum-level sufficiency is a routing proxy, not observed task completion.',
+                              'Tree vote fractions are not calibrated real-world confidence.',
+                              'Staff transfer and queue benefits require separate workflow evaluation.']}
+    for name, baseline in [('majority', DummyClassifier(strategy='most_frequent')),
+                           ('shallow_tree_depth_5', DecisionTreeClassifier(max_depth=5, random_state=42))]:
+        baseline.fit(x.iloc[train], y.iloc[train])
+        report['baselines'][name] = metrics(y.iloc[test], baseline.predict(x.iloc[test]))
+    output = ROOT / 'data/model_evaluation.json'
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    # Persist the evaluated training-partition model, so the reported holdout remains a holdout.
+    # Test accuracy does not select or gate publication of a PoC model.
+    joblib.dump(model, ROOT / 'bank_model.pkl')
+    if make_shap:
+        import shap
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        sample = x.iloc[test].sample(min(128, len(test)), random_state=42)
+        values = shap.TreeExplainer(model).shap_values(sample)
+        importance = np.abs(values).mean(axis=2) if isinstance(values, np.ndarray) and values.ndim == 3 else np.abs(np.array(values)).mean(axis=0)
+        shap.summary_plot(importance, sample, feature_names=FEATURE_COLUMNS, plot_type='bar', show=False)
+        plt.title('Synthetic holdout: model feature contributions')
+        plt.tight_layout()
+        plt.savefig(ROOT / 'shap_summary_bar.png', dpi=150, bbox_inches='tight')
+        plt.close()
+    print(json.dumps({k: report[k] for k in ['rows', 'train_rows', 'test_rows', 'test_profile_overlap', 'cv_accuracy_mean', 'held_out', 'baselines']}, indent=2))
+    print(f'Evaluation saved: {output}')
+    return report
 
-print("\n3. 5-Fold 교차 검증 수행 중...")
-cv_scores = cross_val_score(model, X, y, cv=5, scoring='accuracy', n_jobs=-1)
-print(f"   CV 평균 정확도: {cv_scores.mean() * 100:.2f}% ± {cv_scores.std() * 100:.2f}%")
 
-print("\n4. 모델 평가 (테스트 데이터셋)")
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-
-print(f"\n[결과] 최종 모델 정확도: {accuracy * 100:.2f}%")
-print("\n[상세 분류 리포트]")
-print(classification_report(y_test, y_pred))
-
-print("\n[피처 중요도 (상위 10개)]")
-importances = sorted(zip(FEATURE_COLUMNS, model.feature_importances_), key=lambda x: -x[1])
-for feat, imp in importances[:10]:
-    print(f"  {feat}: {imp:.4f}")
-
-if accuracy >= 0.80:
-    joblib.dump(model, 'bank_model.pkl')
-    print(f"\n[OK] 목표 달성 ({accuracy * 100:.2f}% >= 80%)! 'bank_model.pkl' 저장 완료!")
-else:
-    print(f"\n[WARN] 정확도 {accuracy * 100:.2f}%가 80% 미만이므로 모델을 저장하지 않습니다.")
-
-# ── SHAP 분석 ────────────────────────────────────────────────────────────────
-
-print("\n5. SHAP 분석 중... (수십 초 소요)")
-plt.rcParams['font.family'] = 'DejaVu Sans'
-plt.rcParams['axes.unicode_minus'] = True
-
-explainer = shap.TreeExplainer(model)
-# 테스트셋 전체로 SHAP 계산 (shape: n_samples × n_features × n_classes)
-shap_values = explainer.shap_values(X_test)
-is_3d = isinstance(shap_values, np.ndarray) and shap_values.ndim == 3
-
-# 전체 피처 중요도 요약 (모든 클래스 평균 |SHAP|)
-shap_abs = np.abs(shap_values).mean(axis=2) if is_3d else np.abs(np.array(shap_values)).mean(axis=0)
-shap.summary_plot(
-    shap_abs, X_test,
-    feature_names=FEATURE_COLUMNS,
-    plot_type='bar',
-    show=False,
-)
-plt.title('SHAP Feature Importance (mean |SHAP| across all classes)', fontsize=10)
-plt.tight_layout()
-plt.savefig('shap_summary_bar.png', dpi=150, bbox_inches='tight')
-plt.close()
-print("   [OK] 'shap_summary_bar.png' 저장 완료!")
-print("   (개별 고객 예측 근거는 서버 실행 후 GET /py/explain/{user_id} 로 확인)")
-print("\n[완료] SHAP 분석 종료")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--include-confirmed-db', action='store_true', help='Include only completed, staff-confirmed reception snapshots')
+    parser.add_argument('--skip-shap', action='store_true')
+    args = parser.parse_args()
+    train_model(args.include_confirmed_db, not args.skip_shap)

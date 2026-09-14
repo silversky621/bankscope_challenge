@@ -1,4 +1,5 @@
 import os
+import json
 import base64
 import contextlib
 import joblib
@@ -21,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import redis
 import chatbot_service
 from recommender import ProductRecommender
+from task_schema import FEATURE_COLUMNS as TASK_FEATURE_COLUMNS
 
 load_dotenv()
 
@@ -48,19 +50,8 @@ except Exception as e:
 try:
     model = joblib.load('bank_model.pkl')
 except FileNotFoundError:
-    print("[WARN] 모델 파일(bank_model.pkl)을 찾을 수 없습니다. 먼저 train_model.py를 실행하세요.")
+    print("[WARN] 모델 파일(bank_model.pkl)을 찾을 수 없습니다. 먼저 RF.py를 실행하세요.")
     model = None
-
-# RF.py 의 FEATURE_COLUMNS 와 동일한 순서 유지 (어긋나면 예측이 틀어짐)
-TASK_FEATURE_COLUMNS = [
-    'age', 'is_corporate', 'gender', 'total_balance', 'account_count',
-    'has_active_loan', 'has_overdue_loan', 'has_upcoming_payment',
-    'has_issuing_card', 'has_check_card', 'has_credit_card',
-    'has_deposit_sub', 'has_savings_sub', 'default_risk_level',
-    'recent_deposit_count', 'recent_withdrawal_count', 'recent_transfer_count',
-    'days_since_last_tx', 'max_password_fail_count', 'has_business_id',
-    'savings_near_maturity', 'deposit_near_maturity',
-]
 
 FEATURE_DISPLAY_META = {
     'age': {
@@ -225,54 +216,11 @@ def get_db_cursor():
 
 
 try:
+    # Keep the declared synthetic reference set reproducible; demo subscriptions are not real-customer evidence.
     base_df = pd.read_csv('bank_data_2.csv')
-    try:
-        with get_db_cursor() as (conn, cursor):
-            # CSV에 product_id 컬럼이 직접 포함되어 있으므로 그대로 사용
-            base_df['target_product'] = base_df['product_id'].astype(int)
-
-            cursor.execute("""
-                SELECT
-                    u.age,
-                    u.user_type,
-                    COALESCE((SELECT SUM(balance) FROM account WHERE user_id = u.id), 0) AS total_balance,
-                    CASE WHEN EXISTS (SELECT 1 FROM loan WHERE user_id = u.id AND status = 'ACTIVE')
-                    THEN 1 ELSE 0 END AS has_active_loan,
-                    (
-                        SELECT COUNT(*) FROM transaction_history th
-                        JOIN account a ON th.account_id = a.account_id
-                        WHERE a.user_id = u.id
-                          AND th.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
-                    ) AS recent_tx_count,
-                    fp.product_id AS target_product
-                FROM user u
-                JOIN product_subscription ps ON u.id = ps.user_id AND ps.status = 'ACTIVE'
-                JOIN financial_product fp ON ps.product_id = fp.product_id
-            """)
-            real_rows = cursor.fetchall()
-
-        if real_rows:
-            real_df = pd.DataFrame(real_rows)
-            real_df['is_corporate'] = real_df['user_type'].str.upper().isin(
-                ['CORPORATE', '기업', '법인', 'BUSINESS']
-            ).astype(int)
-            real_df = real_df.drop(columns=['user_type'])
-            real_df['age'] = (
-                real_df['age'].astype(str)
-                .str.replace('대', '').str.replace('세', '').str.strip()
-            )
-            real_df['age'] = pd.to_numeric(real_df['age'], errors='coerce').fillna(30).astype(int)
-            merged_df = pd.concat([base_df, real_df], ignore_index=True)
-            print(f"[추천] 기본 {len(base_df)}건 + 실제 구독 {len(real_rows)}건 병합 완료")
-        else:
-            merged_df = base_df
-            print(f"[추천] 실제 구독 데이터 없음, 기본 데이터 {len(base_df)}건 사용")
-    except Exception as e:
-        base_df['target_product'] = base_df['product_id'].astype(int)
-        merged_df = base_df
-        print(f"[WARN] DB 구독 데이터 로드 실패, 기본 데이터만 사용: {e}")
-
-    recommender_obj = ProductRecommender(merged_df)
+    base_df['target_product'] = base_df['product_id'].astype(int)
+    recommender_obj = ProductRecommender(base_df)
+    print(f"[추천] 합성 참조 데이터 {len(base_df)}건 사용")
 except Exception as e:
     print(f"[WARN] 추천 모델 초기화 실패: {e}")
     recommender_obj = None
@@ -551,13 +499,15 @@ def auto_insert_task(req: AutoTaskRequest):
             insert_query = """
                 INSERT INTO task (
                     user_id, ticket_number, task_type, task_detail_type, assigned_level,
-                    expected_waiting_time, status, member_id, ranking, created_at, updated_at, is_ai
-                ) VALUES (%s, %s, %s, %s, %s, %s, 'WAITING', %s, %s, %s, %s, 1)
+                    expected_waiting_time, status, member_id, ranking, created_at, updated_at, is_ai,
+                    predicted_task_detail_type, feature_snapshot, feature_snapshot_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, 'WAITING', %s, %s, %s, %s, 1, %s, %s, %s)
             """
             now = datetime.now()
             cursor.execute(insert_query, (
                 req.user_id, ticket_number, task_type, task_detail_type, assigned_level,
-                expected_waiting_time, member_id, ranking, now, now
+                expected_waiting_time, member_id, ranking, now, now, task_detail_type,
+                json.dumps({'schema_version': 1, 'features': features}), now
             ))
             inserted_task_id = cursor.lastrowid
             conn.commit()
@@ -665,7 +615,7 @@ def get_user_recommendation(user_id: int):
             "recent_tx_count": int(user_data['recent_tx_count']),
         }
 
-        recommended_ids = recommender_obj.get_recommendations(user_profile)
+        recommended_ids = recommender_obj.get_recommendations(user_profile, top_n=16)
         user_age = user_profile['age']
 
         products_list = []
@@ -674,8 +624,9 @@ def get_user_recommendation(user_id: int):
                 cursor.execute(
                     "SELECT * FROM financial_product WHERE product_id = %s AND is_active = 1"
                     " AND (min_age IS NULL OR min_age <= %s)"
-                    " AND (max_age IS NULL OR max_age >= %s)",
-                    (int(product_id), user_age, user_age)
+                    " AND (max_age IS NULL OR max_age >= %s)"
+                    " AND target_type IN ('ALL', %s)",
+                    (int(product_id), user_age, user_age, 'CORPORATE' if user_profile['is_corporate'] else 'INDIVIDUAL')
                 )
                 product_data = cursor.fetchone()
                 if product_data:
@@ -694,7 +645,7 @@ def get_user_recommendation(user_id: int):
                         "isActive":          bool(product_data['is_active'])
                     })
 
-        return {"result": "SUCCESS", "user_id": user_id, "products": products_list}
+        return {"result": "SUCCESS", "user_id": user_id, "products": products_list[:3]}
 
     except HTTPException:
         raise

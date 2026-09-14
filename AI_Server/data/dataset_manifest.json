@@ -1,0 +1,87 @@
+{
+  "version": "synthetic-v2",
+  "seed": 20260914,
+  "provenance": "Existing developer-authored synthetic CSVs; original generator unavailable.",
+  "external_datasets": [],
+  "representative_of_real_customers": false,
+  "datasets": {
+    "bank_data_1.csv": {
+      "source_sha256": "9f145ada52adede25eb0e20d5356d2d8e6a8177c9347e632af4e58e84c2f915e",
+      "output_sha256": "3b0eb2dac2c881d9ee6ef69d58a6469abb187fb1d07464740f020f2d92f197d7",
+      "source_rows": 10950,
+      "rows": 11041,
+      "changes": {
+        "balance_without_account": 0,
+        "no_account_last_transaction": 850,
+        "recent_deposit_count_outside_window": 2340,
+        "recent_withdrawal_count_outside_window": 2354,
+        "recent_transfer_count_outside_window": 2130,
+        "savings_near_maturity_without_product": 0,
+        "deposit_near_maturity_without_product": 0,
+        "payment_without_loan": 0,
+        "noncorporate_risk": 400,
+        "noncorporate_business_flag": 400,
+        "excluded_incompatible_labels": 76,
+        "deduplicated_rows": 671
+      },
+      "labels": {
+        "금융상품가입": 516,
+        "기업대출": 357,
+        "대출 상환": 655,
+        "법인계좌 개설": 99,
+        "법인카드 발급": 308,
+        "부도관리": 217,
+        "소상공인 대출": 430,
+        "신용대출": 621,
+        "신용카드 발급": 526,
+        "연금신청": 424,
+        "연체관리": 417,
+        "예금": 619,
+        "이체": 896,
+        "입금": 733,
+        "입출금 계좌개설": 106,
+        "적금": 664,
+        "전세자금대출": 528,
+        "주택담보대출": 527,
+        "체크카드 발급": 569,
+        "출금": 811,
+        "카드수령": 599,
+        "통장 비밀번호 변경": 419
+      },
+      "scenario_counts": {
+        "original_cleaned": 10203,
+        "competing_card_signal": 421,
+        "alternative_visit_purpose": 417
+      }
+    },
+    "bank_data_2.csv": {
+      "source_sha256": "1ff9b7b248db1a0aab495e55165d7441a2e95cfcf4bb0678ba24c9b581c4f87e",
+      "output_sha256": "4abcd1180ef7fcc3a69d676ea192fa0ab7afacf177f76f6efd313bae33a274a7",
+      "source_rows": 5216,
+      "rows": 5195,
+      "changes": {
+        "excluded_ineligible_rows": 21,
+        "deduplicated_rows": 0
+      },
+      "labels": {
+        "BankScope 개인 입출금 통장": 220,
+        "BankScope 기업 정기예금": 174,
+        "BankScope 기업 정기적금": 167,
+        "BankScope 기업대출": 49,
+        "BankScope 단기 정기예금": 300,
+        "BankScope 목표 적금": 280,
+        "BankScope 소상공인 대출": 89,
+        "BankScope 시니어 우대예금": 442,
+        "BankScope 신용대출": 393,
+        "BankScope 자유입출금 통장": 200,
+        "BankScope 자유적금": 596,
+        "BankScope 전세자금대출": 296,
+        "BankScope 정기예금": 616,
+        "BankScope 주택 마련 적금": 396,
+        "BankScope 주택담보대출": 361,
+        "BankScope 청년 희망적금": 616
+      },
+      "scenario_counts": {}
+    }
+  }
+}

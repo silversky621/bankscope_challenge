@@ -25,5 +25,9 @@ public class TaskEntity {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isAi;
+    private String predictedTaskDetailType;
+    private String confirmedTaskDetailType;
+    private Integer confirmedBy;
+    private LocalDateTime confirmedAt;
 
 }

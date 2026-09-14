@@ -1,0 +1,350 @@
+{
+  "evaluation_scope": "Synthetic scenario evaluation; not measured real-customer performance.",
+  "dataset_sha256": "3b0eb2dac2c881d9ee6ef69d58a6469abb187fb1d07464740f020f2d92f197d7",
+  "confirmed_app_rows_requested": 0,
+  "rows": 11041,
+  "train_rows": 8843,
+  "test_rows": 2198,
+  "test_profile_overlap": 0,
+  "split": "GroupShuffleSplit by profile lineage; seed=42",
+  "cv_scope": "5-fold StratifiedGroupKFold on training partition only",
+  "cv_accuracy_mean": 0.7491815428610893,
+  "cv_macro_f1_mean": 0.734541214069238,
+  "held_out": {
+    "accuracy": 0.7552320291173794,
+    "macro_f1": 0.7374250675775859,
+    "minimum_level_sufficient_rate": 0.9249317561419472
+  },
+  "classification_report": {
+    "금융상품가입": {
+      "precision": 0.6666666666666666,
+      "recall": 0.04081632653061224,
+      "f1-score": 0.07692307692307693,
+      "support": 98.0
+    },
+    "기업대출": {
+      "precision": 0.7045454545454546,
+      "recall": 0.9841269841269841,
+      "f1-score": 0.8211920529801324,
+      "support": 63.0
+    },
+    "대출 상환": {
+      "precision": 0.9182389937106918,
+      "recall": 0.948051948051948,
+      "f1-score": 0.9329073482428115,
+      "support": 154.0
+    },
+    "법인계좌 개설": {
+      "precision": 0.9130434782608695,
+      "recall": 1.0,
+      "f1-score": 0.9545454545454546,
+      "support": 21.0
+    },
+    "법인카드 발급": {
+      "precision": 0.8888888888888888,
+      "recall": 0.8,
+      "f1-score": 0.8421052631578947,
+      "support": 70.0
+    },
+    "부도관리": {
+      "precision": 0.8958333333333334,
+      "recall": 0.9555555555555556,
+      "f1-score": 0.9247311827956989,
+      "support": 45.0
+    },
+    "소상공인 대출": {
+      "precision": 0.5813953488372093,
+      "recall": 0.30864197530864196,
+      "f1-score": 0.4032258064516129,
+      "support": 81.0
+    },
+    "신용대출": {
+      "precision": 0.41317365269461076,
+      "recall": 0.5564516129032258,
+      "f1-score": 0.4742268041237113,
+      "support": 124.0
+    },
+    "신용카드 발급": {
+      "precision": 0.6811594202898551,
+      "recall": 0.42727272727272725,
+      "f1-score": 0.5251396648044693,
+      "support": 110.0
+    },
+    "연금신청": {
+      "precision": 0.6875,
+      "recall": 0.9166666666666666,
+      "f1-score": 0.7857142857142857,
+      "support": 84.0
+    },
+    "연체관리": {
+      "precision": 0.8787878787878788,
+      "recall": 0.9456521739130435,
+      "f1-score": 0.9109947643979057,
+      "support": 92.0
+    },
+    "예금": {
+      "precision": 0.9318181818181818,
+      "recall": 0.9534883720930233,
+      "f1-score": 0.9425287356321839,
+      "support": 129.0
+    },
+    "이체": {
+      "precision": 0.925,
+      "recall": 0.8087431693989071,
+      "f1-score": 0.8629737609329446,
+      "support": 183.0
+    },
+    "입금": {
+      "precision": 0.9130434782608695,
+      "recall": 0.6363636363636364,
+      "f1-score": 0.75,
+      "support": 132.0
+    },
+    "입출금 계좌개설": {
+      "precision": 0.6666666666666666,
+      "recall": 0.64,
+      "f1-score": 0.6530612244897959,
+      "support": 25.0
+    },
+    "적금": {
+      "precision": 0.9481481481481482,
+      "recall": 0.9411764705882353,
+      "f1-score": 0.9446494464944649,
+      "support": 136.0
+    },
+    "전세자금대출": {
+      "precision": 0.5822784810126582,
+      "recall": 0.4791666666666667,
+      "f1-score": 0.5257142857142857,
+      "support": 96.0
+    },
+    "주택담보대출": {
+      "precision": 0.47643979057591623,
+      "recall": 0.91,
+      "f1-score": 0.6254295532646048,
+      "support": 100.0
+    },
+    "체크카드 발급": {
+      "precision": 0.6193181818181818,
+      "recall": 0.9008264462809917,
+      "f1-score": 0.734006734006734,
+      "support": 121.0
+    },
+    "출금": {
+      "precision": 0.8990825688073395,
+      "recall": 0.6758620689655173,
+      "f1-score": 0.7716535433070866,
+      "support": 145.0
+    },
+    "카드수령": {
+      "precision": 0.7671232876712328,
+      "recall": 0.9655172413793104,
+      "f1-score": 0.8549618320610687,
+      "support": 116.0
+    },
+    "통장 비밀번호 변경": {
+      "precision": 0.8831168831168831,
+      "recall": 0.9315068493150684,
+      "f1-score": 0.9066666666666666,
+      "support": 73.0
+    },
+    "accuracy": 0.7552320291173794,
+    "macro avg": {
+      "precision": 0.7655122174505244,
+      "recall": 0.7602675859718526,
+      "f1-score": 0.7374250675775859,
+      "support": 2198.0
+    },
+    "weighted avg": {
+      "precision": 0.7746163937607917,
+      "recall": 0.7552320291173794,
+      "f1-score": 0.7392979614207617,
+      "support": 2198.0
+    }
+  },
+  "baselines": {
+    "majority": {
+      "accuracy": 0.0832575068243858,
+      "macro_f1": 0.006987132984613034,
+      "minimum_level_sufficient_rate": 0.5436760691537762
+    },
+    "shallow_tree_depth_5": {
+      "accuracy": 0.3739763421292084,
+      "macro_f1": 0.24371010701870952,
+      "minimum_level_sufficient_rate": 0.46360327570518656
+    }
+  },
+  "stress_cases": [
+    {
+      "id": "new_individual",
+      "description": "거래 이력이 없는 중년 개인 고객의 계좌 개설",
+      "features": {
+        "age": 52
+      },
+      "actual_task": "입출금 계좌개설",
+      "prediction": "입출금 계좌개설",
+      "max_vote_fraction": 0.5155915942984828,
+      "exact_match": true,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "new_corporate",
+      "description": "거래 이력이 없는 법인의 계좌 개설",
+      "features": {
+        "age": 45,
+        "is_corporate": 1,
+        "has_business_id": 1
+      },
+      "actual_task": "법인계좌 개설",
+      "prediction": "법인계좌 개설",
+      "max_vote_fraction": 0.9058802457493365,
+      "exact_match": true,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "card_waiting_withdrawal",
+      "description": "카드를 기다리지만 오늘 방문 목적은 출금",
+      "features": {
+        "age": 61,
+        "account_count": 2,
+        "total_balance": 12000000,
+        "has_issuing_card": 1,
+        "has_check_card": 1,
+        "recent_withdrawal_count": 3,
+        "days_since_last_tx": 4
+      },
+      "actual_task": "출금",
+      "prediction": "카드수령",
+      "max_vote_fraction": 0.43405708171060636,
+      "exact_match": false,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "card_and_repayment",
+      "description": "카드 대기와 상환 일정이 함께 있으며 실제 목적은 상환",
+      "features": {
+        "age": 42,
+        "account_count": 2,
+        "total_balance": 4200000,
+        "has_issuing_card": 1,
+        "has_active_loan": 1,
+        "has_upcoming_payment": 1,
+        "days_since_last_tx": 12
+      },
+      "actual_task": "대출 상환",
+      "prediction": "대출 상환",
+      "max_vote_fraction": 0.5803705229717758,
+      "exact_match": true,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "wealthy_password_reset",
+      "description": "잔액이 많지만 비밀번호 변경을 원하는 고객",
+      "features": {
+        "age": 57,
+        "account_count": 3,
+        "total_balance": 180000000,
+        "max_password_fail_count": 5,
+        "days_since_last_tx": 2
+      },
+      "actual_task": "통장 비밀번호 변경",
+      "prediction": "통장 비밀번호 변경",
+      "max_vote_fraction": 0.4463186815549832,
+      "exact_match": true,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "overdue_transfer",
+      "description": "연체 대출이 있지만 오늘은 이체하러 온 고객",
+      "features": {
+        "age": 39,
+        "account_count": 1,
+        "total_balance": 350000,
+        "has_overdue_loan": 1,
+        "recent_transfer_count": 6,
+        "days_since_last_tx": 3
+      },
+      "actual_task": "이체",
+      "prediction": "연체관리",
+      "max_vote_fraction": 0.5200538085437244,
+      "exact_match": false,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "maturing_savings",
+      "description": "만기 임박 적금이 있는 고객의 상품 상담",
+      "features": {
+        "age": 34,
+        "account_count": 2,
+        "total_balance": 18000000,
+        "has_savings_sub": 1,
+        "savings_near_maturity": 1,
+        "days_since_last_tx": 10
+      },
+      "actual_task": "금융상품가입",
+      "prediction": "적금",
+      "max_vote_fraction": 0.9544621591243627,
+      "exact_match": false,
+      "minimum_level_sufficient": false
+    },
+    {
+      "id": "senior_card_collection",
+      "description": "고령이라는 이유만으로 연금 업무로 단정할 수 없는 카드 수령",
+      "features": {
+        "age": 78,
+        "account_count": 1,
+        "total_balance": 5600000,
+        "has_issuing_card": 1,
+        "days_since_last_tx": 40
+      },
+      "actual_task": "카드수령",
+      "prediction": "연금신청",
+      "max_vote_fraction": 0.39436601267114263,
+      "exact_match": false,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "corporate_simple_deposit",
+      "description": "법인 고객의 단순 입금",
+      "features": {
+        "age": 46,
+        "is_corporate": 1,
+        "has_business_id": 1,
+        "account_count": 2,
+        "total_balance": 85000000,
+        "recent_deposit_count": 8,
+        "days_since_last_tx": 1
+      },
+      "actual_task": "입금",
+      "prediction": "법인카드 발급",
+      "max_vote_fraction": 0.5870864948095957,
+      "exact_match": false,
+      "minimum_level_sufficient": true
+    },
+    {
+      "id": "corporate_default",
+      "description": "고위험 법인의 부도관리 상담",
+      "features": {
+        "age": 50,
+        "is_corporate": 1,
+        "has_business_id": 1,
+        "account_count": 2,
+        "total_balance": 80000,
+        "has_overdue_loan": 1,
+        "default_risk_level": 3,
+        "days_since_last_tx": 14
+      },
+      "actual_task": "부도관리",
+      "prediction": "부도관리",
+      "max_vote_fraction": 0.7703932911217319,
+      "exact_match": true,
+      "minimum_level_sufficient": true
+    }
+  ],
+  "limitations": [
+    "Labels and scenario frequencies are developer assumptions.",
+    "Minimum-level sufficiency is a routing proxy, not observed task completion.",
+    "Tree vote fractions are not calibrated real-world confidence.",
+    "Staff transfer and queue benefits require separate workflow evaluation."
+  ]
+}
