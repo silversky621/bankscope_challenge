@@ -209,7 +209,9 @@ public class TaskService {
         if (!accepting && !cancelling && !completing) return TaskResult.FAILURE_INVALID_STATUS;
         TaskRouting.Route route = TaskRouting.find(completing ? actualDetail : task.getTaskDetailType());
         if (route == null) return TaskResult.FAILURE_INVALID_TASK_TYPE;
-        if (!cancelling && !canHandle(taskMapper.selectMemberForUpdate(actor.getId().intValue()), route))
+        // Assignment authorizes this task, including fallback to the highest-level remaining staff.
+        // Recheck working status, but do not require the assignee to meet the routing level again.
+        if (!cancelling && !isWorkingMember(taskMapper.selectMemberForUpdate(actor.getId().intValue())))
             return TaskResult.FAILURE_TARGET_UNAVAILABLE;
         task.setStatus(status);
         if (completing) applyConfirmedTask(task, route, actor.getId().intValue());
@@ -277,9 +279,12 @@ public class TaskService {
         return TaskResult.SUCCESS;
     }
 
+    private boolean isWorkingMember(MemberEntity member) {
+        return member != null && Integer.valueOf(1).equals(member.getStatus()) && member.getCounterNumber() > 0;
+    }
+
     private boolean canHandle(MemberEntity member, TaskRouting.Route route) {
-        return member != null && Integer.valueOf(1).equals(member.getStatus()) && member.getCounterNumber() > 0
-                && member.getLevel() != null && member.getLevel() >= route.minLevel();
+        return isWorkingMember(member) && member.getLevel() != null && member.getLevel() >= route.minLevel();
     }
 
     private void applyConfirmedTask(TaskEntity task, TaskRouting.Route route, Integer actorId) {

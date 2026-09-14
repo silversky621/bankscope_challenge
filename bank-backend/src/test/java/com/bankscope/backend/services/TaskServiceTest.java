@@ -75,6 +75,8 @@ class TaskServiceTest {
         task.setMemberId(3);
         assertEquals(TaskResult.FAILURE_NOT_ALLOWED, service.tossTask(actor, new TaskTransferRequest(7L, 2, "입금", "상담 요청")));
         assertEquals(TaskResult.FAILURE_NOT_ALLOWED, service.updateTaskStatus(actor, 7L, "COMPLETED", "입금"));
+        task.setStatus("WAITING");
+        assertEquals(TaskResult.FAILURE_NOT_ALLOWED, service.updateTaskStatus(actor, 7L, "IN_PROGRESS", null));
         verify(mapper, never()).transferTask(any());
         verify(mapper, never()).updateTaskOutcome(any());
     }
@@ -102,9 +104,52 @@ class TaskServiceTest {
         verify(mapper).insertTaskAction(7L, 1, "COMPLETE", "실제 처리 업무 확인: 출금");
     }
 
-    @Test void rejectsCompletionBeyondBankerCapability() {
+    @Test void assignedHigherLevelTaskCanBeAcceptedAndCompleted() {
+        successfulWrites();
         when(mapper.selectMemberForUpdate(1)).thenReturn(actor);
-        assertEquals(TaskResult.FAILURE_TARGET_UNAVAILABLE, service.updateTaskStatus(actor, 7L, "COMPLETED", "주택담보대출"));
+        task.setTaskType("상담 업무");
+        task.setTaskDetailType("주택담보대출");
+        task.setAssignedLevel("LEVEL_4");
+        task.setStatus("WAITING");
+
+        assertEquals(TaskResult.SUCCESS, service.updateTaskStatus(actor, 7L, "IN_PROGRESS", null));
+        assertEquals("IN_PROGRESS", task.getStatus());
+        assertNull(task.getConfirmedTaskDetailType());
+        assertEquals(TaskResult.SUCCESS, service.updateTaskStatus(actor, 7L, "COMPLETED", "주택담보대출"));
+        assertEquals("COMPLETED", task.getStatus());
+        assertEquals("주택담보대출", task.getConfirmedTaskDetailType());
+        assertEquals(1, task.getConfirmedBy());
+        assertEquals("카드수령", task.getPredictedTaskDetailType());
+        assertEquals("LEVEL_4", task.getAssignedLevel());
+        assertEquals(1, actor.getLevel());
+        verify(mapper, times(2)).updateTaskOutcome(task);
+        verify(mapper).insertTaskAction(7L, 1, "START_PROCESSING", "업무 수락");
+        verify(mapper).insertTaskAction(7L, 1, "COMPLETE", "실제 처리 업무 확인: 주택담보대출");
+    }
+
+    @Test void completionCanConfirmHigherLevelActualPurpose() {
+        successfulWrites();
+        when(mapper.selectMemberForUpdate(1)).thenReturn(actor);
+        assertEquals(TaskResult.SUCCESS, service.updateTaskStatus(actor, 7L, "COMPLETED", "주택담보대출"));
+        assertEquals("주택담보대출", task.getTaskDetailType());
+        assertEquals("주택담보대출", task.getConfirmedTaskDetailType());
+        assertEquals("LEVEL_4", task.getAssignedLevel());
+        assertEquals("카드수령", task.getPredictedTaskDetailType());
+        assertEquals(1, actor.getLevel());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,1,WAITING,IN_PROGRESS", "1,0,WAITING,IN_PROGRESS",
+            "0,1,IN_PROGRESS,COMPLETED", "1,0,IN_PROGRESS,COMPLETED"})
+    void rejectsAssignedProcessingWhenOffDutyOrWithoutCounter(int workingStatus, int counter,
+                                                              String currentStatus, String nextStatus) {
+        actor.setStatus(workingStatus);
+        actor.setCounterNumber(counter);
+        when(mapper.selectMemberForUpdate(1)).thenReturn(actor);
+        task.setStatus(currentStatus);
+        assertEquals(TaskResult.FAILURE_TARGET_UNAVAILABLE,
+                service.updateTaskStatus(actor, 7L, nextStatus, "주택담보대출"));
+        assertEquals(currentStatus, task.getStatus());
         verify(mapper, never()).updateTaskOutcome(any());
     }
 

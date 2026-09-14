@@ -776,7 +776,7 @@ const BankerWorkSpace = () => {
                     break;
 
                 case 'FAILURE_TARGET_UNAVAILABLE':
-                    showAlert('현재 근무 상태나 업무 권한으로 수락할 수 없습니다. 이관 가능한 창구를 확인해주세요.');
+                    showAlert('현재 근무 상태와 창구 배정을 확인해주세요.');
                     break;
 
                 case 'FAILURE_SESSION':
