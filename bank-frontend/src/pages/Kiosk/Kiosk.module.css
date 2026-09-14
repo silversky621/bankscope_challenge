@@ -1,6 +1,10 @@
 .kioskContainer {
+    /* 글자 크기 배율 (100% = 1, 125% = 1.25, 150% = 1.5).
+       Kiosk.jsx가 --kiosk-font-scale-selected 를 inline style로 주입하고,
+       모바일(480px 이하)에서는 아래 미디어쿼리가 1로 고정한다. */
+    --kiosk-font-scale: var(--kiosk-font-scale-selected, 1);
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
@@ -11,6 +15,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 15px 20px;
     background-color: #ffffff;
     z-index: 2;
@@ -20,6 +25,15 @@
     font-size: 1.5rem;
     font-weight: 800;
     color: #009d84;
+    white-space: nowrap;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .dateTime {
@@ -28,6 +42,51 @@
     color: #333;
     text-align: right;
     line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* 노약자용 글자 크기 조절 버튼 (헤더는 배율의 영향을 받지 않도록 고정 크기) */
+.fontScaleControl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid #c2e9df;
+    border-radius: 999px;
+    background-color: #f7fdfc;
+}
+
+.fontScaleIcon {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #009d84;
+    padding: 0 6px 0 8px;
+    line-height: 1;
+}
+
+.fontScaleButton {
+    min-width: 52px;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-color: transparent;
+    color: #555;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.fontScaleButton:hover {
+    background-color: #e5f5f2;
+}
+
+.fontScaleButton.fontScaleActive {
+    background-color: #009d84;
+    border-color: #009d84;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 157, 132, 0.3);
 }
 
 .mainArea {
@@ -35,7 +94,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-end; /* 카드/버튼은 하단에 고정, 제목 블록은 남는 공간 가운데 */
     overflow: hidden;
 }
 
@@ -53,8 +112,9 @@
     position: relative;
     z-index: 1;
     text-align: center;
-    margin-top: auto; /* 콘텐츠를 화면 중앙~하단으로 밀어냄 */
-    margin-bottom: 50px; /* 제목과 카드 사이 간격 */
+    margin-top: auto; /* 헤더와 카드 사이 남는 공간의 세로 중앙에 배치 (큰 PC 화면에서 하단으로 몰리지 않게) */
+    margin-bottom: auto;
+    padding: 28px 0 24px; /* 공간이 빠듯한 150%에서도 헤더/카드와 최소 간격을 위아래 비슷하게 유지 */
     color: white;
 }
 
@@ -82,101 +142,30 @@
 }
 
 .title {
-    font-size: 3.5rem;
+    font-size: calc(3.5rem * var(--kiosk-font-scale, 1));
     font-weight: 900;
     line-height: 1.2;
     margin-bottom: 20px;
     letter-spacing: -2px;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+    word-break: keep-all; /* 글자가 커져도 단어 중간에서 줄바꿈되지 않게 */
+    padding: 0 16px;
 }
 
 .subtitle {
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     font-weight: 400;
     line-height: 1.5;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+    word-break: keep-all;
+    padding: 0 16px;
 }
 
-.infoCards {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 25px; /* 버튼과 카드 사이 간격 */
-    padding: 0 20px;
-}
-
-.card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 20px 0;
-    text-align: center;
-    color: #333;
-    flex: 1;
-    max-width: 160px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.cardTitle {
-    display: block;
-    font-size: 0.9rem;
-    color: #555;
-    margin-bottom: 8px;
-}
-
-.cardValue {
-    display: block;
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #000;
-}
-
-/* 💡 접수 시작하기 버튼 스타일 */
-.buttonContainer {
-    display: flex;
-    gap: 1rem;
-    justify-content: center; /* 버튼들을 중앙 정렬 */
-    margin: 1rem 0 5rem 0;
-    position: relative;
-    z-index: 1;
-}
-
-.startButton, .startButton2 {
-    width: 12rem;
-    padding: 18px 0;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.startButton {
-    background-color: #009d84;
-    color: #ffffff;
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 157, 132, 0.3);
-}
-
-.startButton:active {
-    background-color: #00816c;
-}
-
-.startButton:disabled, .startButton2:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.startButton2 {
-    background-color: #ffffff;
-    color: #009d84;
-    border: 2px solid #009d84;
-    box-shadow: 0 4px 12px rgba(0, 157, 132, 0.1);
-}
-
-.startButton2:active {
-    background-color: #f0fdfa;
+/* 📱 태블릿: 100%에서는 기존 크기 그대로, 배율을 올렸을 때만 화면 폭 기준으로 상한을 둔다 */
+@media screen and (max-width: 768px) {
+    .title {
+        font-size: min(calc(3.5rem * var(--kiosk-font-scale, 1)), 9vw);
+    }
 }
 
 /* ---2단계 KioskLogin  --- */
@@ -196,14 +185,14 @@
 }
 
 .loginTitle {
-    font-size: 2.5rem;
+    font-size: calc(2.5rem * var(--kiosk-font-scale, 1));
     font-weight: 900;
     color: #222;
     margin-bottom: 10px;
 }
 
 .loginSubtitle {
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     color: #444;
 }
 
@@ -224,7 +213,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: calc(1.5rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #009d84;
 }
@@ -237,7 +226,7 @@
 
 /* 휴대폰 번호 표시 스타일 (비회원 가입 폼에서는 이제 사용안함) */
 .phoneNumberDisplay {
-    font-size: 2.5rem;
+    font-size: calc(2.5rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #009d84;
     letter-spacing: 2px;
@@ -253,7 +242,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
     width: 100%;
-    max-width: 350px;
+    max-width: calc(350px * var(--kiosk-font-scale, 1));
     margin-bottom: 40px;
 }
 
@@ -262,11 +251,12 @@
     border: none;
     border-radius: 8px;
     padding: 20px 0;
-    font-size: 2rem;
+    font-size: calc(2rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #000;
     cursor: pointer;
     transition: background-color 0.2s;
+    word-break: keep-all;
 }
 
 .keypadBtn:active {
@@ -282,7 +272,7 @@
     border: 1px solid #c2e9df;
     border-radius: 6px;
     padding: 10px 15px;
-    font-size: 1rem;
+    font-size: calc(1rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #000;
     cursor: pointer;
@@ -309,7 +299,7 @@
 }
 
 .inputGroup label {
-    font-size: 0.95rem;
+    font-size: calc(0.95rem * var(--kiosk-font-scale, 1));
     font-weight: 700;
     color: #495057; /* 너무 까맣지 않은 세련된 다크그레이 */
     margin-left: 4px; /* 라벨을 살짝 우측으로 밀어 안정감 부여 */
@@ -326,7 +316,7 @@
 .separator {
     font-weight: 600;
     color: #adb5bd;
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
 }
 
 .inputField {
@@ -335,7 +325,7 @@
 
     border: 1.5px solid #e9ecef;
     border-radius: 12px; /* 둥글기를 부드럽게 */
-    font-size: 1.1rem;
+    font-size: calc(1.1rem * var(--kiosk-font-scale, 1));
     font-weight: 500;
     letter-spacing: 2px;
     text-align: center;
@@ -353,7 +343,7 @@ input[name="ssnBack"] {
 .inputField::placeholder {
     color: #ced4da;
     letter-spacing: normal; /* 플레이스홀더는 자간이 벌어지지 않게 */
-    font-size: 1rem;
+    font-size: calc(1rem * var(--kiosk-font-scale, 1));
     font-weight: 400;
 }
 
@@ -370,7 +360,7 @@ input[name="ssnBack"] {
     padding: 18px;
     background-color: #009d84;
     color: white;
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     font-weight: 700;
     border: none;
     border-radius: 12px;
@@ -414,6 +404,7 @@ input[name="ssnBack"] {
     max-width: 900px;
     margin: 0 auto;
     flex: 1;
+    box-sizing: border-box; /* 태블릿 미디어쿼리의 좌우 padding이 폭에 더해져 가로 스크롤이 생기지 않도록 */
 }
 
 .modeCard {
@@ -431,14 +422,14 @@ input[name="ssnBack"] {
 }
 
 .modeTitle {
-    font-size: 2.2rem;
+    font-size: calc(2.2rem * var(--kiosk-font-scale, 1));
     font-weight: 800;
     color: #009d84;
     margin-bottom: 20px;
 }
 
 .modeDesc {
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     color: #495057;
     line-height: 1.7;
     margin-bottom: 35px;
@@ -448,7 +439,7 @@ input[name="ssnBack"] {
 .modeButtonPrimary, .modeButtonSecondary {
     padding: 18px 0;
     width: 100%;
-    font-size: 1.4rem;
+    font-size: calc(1.4rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     border-radius: 8px;
     cursor: pointer;
@@ -483,10 +474,10 @@ input[name="ssnBack"] {
 /* 📱 태블릿 (가로 768px 이하) */
 @media screen and (max-width: 768px) {
     .loginTitle {
-        font-size: 2rem;
+        font-size: calc(2rem * var(--kiosk-font-scale, 1));
     }
     .loginSubtitle {
-        font-size: 1rem;
+        font-size: calc(1rem * var(--kiosk-font-scale, 1));
     }
 
     /* 주민번호 13자리가 가로로 다 들어갈 수 있도록 박스 크기 축소 */
@@ -498,19 +489,19 @@ input[name="ssnBack"] {
     .ssnBox {
         width: 25px;
         height: 35px;
-        font-size: 1.2rem;
+        font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     }
 
     /* 키패드 크기 조정 */
     .keypad {
-        max-width: 300px;
+        max-width: calc(300px * var(--kiosk-font-scale, 1));
         gap: 10px;
         margin-bottom: 30px;
     }
 
     .keypadBtn {
         padding: 15px 0;
-        font-size: 1.5rem;
+        font-size: calc(1.5rem * var(--kiosk-font-scale, 1));
     }
 
     /* 이전으로 버튼 크기 및 여백 조정 */
@@ -519,7 +510,7 @@ input[name="ssnBack"] {
         bottom: 20px;
         left: 15px;
         padding: 8px 12px;
-        font-size: 0.9rem;
+        font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
         z-index: 9999;
     }
 
@@ -536,28 +527,28 @@ input[name="ssnBack"] {
     }
 
     .modeTitle {
-        font-size: 1.8rem;
+        font-size: calc(1.8rem * var(--kiosk-font-scale, 1));
     }
 
     .modeDesc {
-        font-size: 1rem;
+        font-size: calc(1rem * var(--kiosk-font-scale, 1));
         margin-bottom: 25px;
     }
 
     .modeButtonPrimary, .modeButtonSecondary {
         padding: 14px 0;
-        font-size: 1.2rem;
+        font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     }
 }
 
 /* 📱 모바일 (가로 480px 이하) */
 @media screen and (max-width: 480px) {
     .loginTitle {
-        font-size: 1.8rem;
+        font-size: calc(1.8rem * var(--kiosk-font-scale, 1));
     }
 
     .loginSubtitle {
-        font-size: 0.9rem;
+        font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
     }
 
     /* 모바일에서는 화면이 매우 좁으므로 박스 크기와 간격을 최소화 */
@@ -569,13 +560,13 @@ input[name="ssnBack"] {
     .ssnBox {
         width: 20px;
         height: 30px;
-        font-size: 1rem;
+        font-size: calc(1rem * var(--kiosk-font-scale, 1));
         border-radius: 3px;
     }
 
     .dash {
         margin: 0 2px;
-        font-size: 0.8rem;
+        font-size: calc(0.8rem * var(--kiosk-font-scale, 1));
     }
 
     /* 키패드 및 버튼 최소화 */
@@ -586,7 +577,7 @@ input[name="ssnBack"] {
 
     .keypadBtn {
         padding: 12px 0;
-        font-size: 1.3rem;
+        font-size: calc(1.3rem * var(--kiosk-font-scale, 1));
         border-radius: 6px;
     }
 
@@ -611,18 +602,18 @@ input[name="ssnBack"] {
     }
 
     .modeTitle {
-        font-size: 1.5rem;
+        font-size: calc(1.5rem * var(--kiosk-font-scale, 1));
         margin-bottom: 10px;
     }
 
     .modeDesc {
-        font-size: 0.85rem;
+        font-size: calc(0.85rem * var(--kiosk-font-scale, 1));
         margin-bottom: 15px;
     }
 
     .modeButtonPrimary, .modeButtonSecondary {
         padding: 10px 0;
-        font-size: 1rem;
+        font-size: calc(1rem * var(--kiosk-font-scale, 1));
     }
 }
 
@@ -641,8 +632,8 @@ input[name="ssnBack"] {
 /* 유저 정보 뱃지 */
 .userInfoWrapper {
     position: absolute;
-    top: -46px; /* 헤더 우측 상단 쪽에 맞추기 위한 위치조정 */
-    right: 130px;
+    top: 8px; /* 헤더의 글자 크기 조절 버튼과 겹치지 않도록 본문 영역 우측 상단에 배치 */
+    right: 20px;
     z-index: 10;
 }
 
@@ -656,7 +647,7 @@ input[name="ssnBack"] {
 }
 
 .badgeText {
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--kiosk-font-scale, 1));
     color: #009d84;
     font-weight: bold;
 }
@@ -667,7 +658,7 @@ input[name="ssnBack"] {
 }
 
 .userName {
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #333;
 }
@@ -678,7 +669,7 @@ input[name="ssnBack"] {
 }
 
 .taskMainTitle {
-    font-size: 2.5rem;
+    font-size: calc(2.5rem * var(--kiosk-font-scale, 1));
     font-weight: 900;
     color: #222;
 }
@@ -718,14 +709,14 @@ input[name="ssnBack"] {
 }
 
 .categoryTitle {
-    font-size: 1.4rem;
+    font-size: calc(1.4rem * var(--kiosk-font-scale, 1));
     font-weight: 800;
     color: #333;
     margin-bottom: 5px;
 }
 
 .categorySubtitle {
-    font-size: 0.75rem;
+    font-size: calc(0.75rem * var(--kiosk-font-scale, 1));
     color: #888;
 }
 
@@ -745,7 +736,7 @@ input[name="ssnBack"] {
     font-weight: bold;
     padding: 12px 5px;
     border-radius: 4px;
-    font-size: 0.95rem;
+    font-size: calc(0.95rem * var(--kiosk-font-scale, 1));
     cursor: pointer;
     transition: background-color 0.2s;
     text-align: center;
@@ -759,7 +750,7 @@ input[name="ssnBack"] {
 /* 카드 하단 대기인원 정보 */
 .categoryFooter {
     text-align: center;
-    font-size: 0.9rem;
+    font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     color: #0056b3; /* 파란색 텍스트 */
     border-top: 1px solid #eee;
@@ -776,12 +767,11 @@ input[name="ssnBack"] {
     }
 
     .userInfoWrapper {
-        right: 120px;
-        bottom: 0;
+        right: 12px;
     }
 
     .taskMainTitle {
-        font-size: 2rem;
+        font-size: calc(2rem * var(--kiosk-font-scale, 1));
         margin-bottom: -1rem;
 
     }
@@ -798,21 +788,21 @@ input[name="ssnBack"] {
     }
 
     .categoryTitle {
-        font-size: 1.1rem;
+        font-size: calc(1.1rem * var(--kiosk-font-scale, 1));
     }
 
     .categorySubtitle {
-        font-size: 0.65rem;
+        font-size: calc(0.65rem * var(--kiosk-font-scale, 1));
     }
 
     /* 세부 업무 버튼 크기 축소 */
     .taskItemBtn {
-        font-size: 0.85rem;
+        font-size: calc(0.85rem * var(--kiosk-font-scale, 1));
         padding: 8px 4px;
     }
 
     .categoryFooter {
-        font-size: 0.8rem;
+        font-size: calc(0.8rem * var(--kiosk-font-scale, 1));
     }
 }
 
@@ -823,9 +813,7 @@ input[name="ssnBack"] {
     }
 
     .userInfoWrapper {
-        right: 120px;
-        bottom: 0;
-
+        right: 8px;
     }
 
     .userBadge {
@@ -833,11 +821,11 @@ input[name="ssnBack"] {
     }
 
     .badgeText, .userName {
-        font-size: 0.75rem;
+        font-size: calc(0.75rem * var(--kiosk-font-scale, 1));
     }
 
     .taskMainTitle {
-        font-size: 1.5rem;
+        font-size: calc(1.5rem * var(--kiosk-font-scale, 1));
         margin-bottom: 0;
     }
 
@@ -853,11 +841,11 @@ input[name="ssnBack"] {
     }
 
     .categoryTitle {
-        font-size: 0.9rem;
+        font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
     }
 
     .categorySubtitle {
-        font-size: 0.55rem;
+        font-size: calc(0.55rem * var(--kiosk-font-scale, 1));
     }
 
     /* 🚨 모바일에서는 카드가 너무 좁아지므로, 카드 안의 버튼들은 무조건 1줄로 나열되게 변경 (글씨 깨짐 방지) */
@@ -867,12 +855,12 @@ input[name="ssnBack"] {
     }
 
     .taskItemBtn {
-        font-size: 0.75rem;
+        font-size: calc(0.75rem * var(--kiosk-font-scale, 1));
         padding: 6px 2px;
     }
 
     .categoryFooter {
-        font-size: 0.65rem;
+        font-size: calc(0.65rem * var(--kiosk-font-scale, 1));
         padding-top: 8px;
     }
 }
@@ -897,14 +885,14 @@ input[name="ssnBack"] {
 }
 
 .completeTitle {
-    font-size: 2.5rem;
+    font-size: calc(2.5rem * var(--kiosk-font-scale, 1));
     font-weight: 900;
     color: #222;
     margin-bottom: 15px;
 }
 
 .completeSubtitle {
-    font-size: 1.5rem;
+    font-size: calc(1.5rem * var(--kiosk-font-scale, 1));
     color: #333;
     font-weight: 500;
 }
@@ -921,7 +909,7 @@ input[name="ssnBack"] {
 }
 
 .ticketNumber {
-    font-size: 4.5rem;
+    font-size: calc(4.5rem * var(--kiosk-font-scale, 1));
     font-weight: 900;
     color: #4a9e8e; /* 시안 속 진한 민트색 */
     margin-bottom: 40px;
@@ -938,7 +926,7 @@ input[name="ssnBack"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 1.2rem;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
     color: #000;
 }
 
@@ -960,7 +948,7 @@ input[name="ssnBack"] {
 
 .ticketValue {
     font-weight: 900;
-    font-size: 1.4rem;
+    font-size: calc(1.4rem * var(--kiosk-font-scale, 1));
     color: #000;
     white-space: nowrap;
 }
@@ -973,7 +961,7 @@ input[name="ssnBack"] {
 
 .goHomeBtn, .addMoreBtn {
     padding: 15px 40px;
-    font-size: 1.3rem;
+    font-size: calc(1.3rem * var(--kiosk-font-scale, 1));
     font-weight: bold;
     border: none;
     border-radius: 8px;
@@ -1004,15 +992,15 @@ input[name="ssnBack"] {
 
 /* 📱 4단계 반응형 미디어 쿼리 */
 @media screen and (max-width: 768px) {
-    .completeTitle { font-size: 2rem; }
-    .completeSubtitle { font-size: 1.2rem; }
+    .completeTitle { font-size: calc(2rem * var(--kiosk-font-scale, 1)); }
+    .completeSubtitle { font-size: calc(1.2rem * var(--kiosk-font-scale, 1)); }
     .ticketCard {
         max-width: 90%;
         padding: 40px 30px;
     }
-    .ticketNumber { font-size: 3.5rem; }
-    .ticketRow { font-size: 1rem; }
-    .ticketValue { font-size: 1.2rem; }
+    .ticketNumber { font-size: calc(3.5rem * var(--kiosk-font-scale, 1)); }
+    .ticketRow { font-size: calc(1rem * var(--kiosk-font-scale, 1)); }
+    .ticketValue { font-size: calc(1.2rem * var(--kiosk-font-scale, 1)); }
     .buttonGroup {
         flex-direction: column;
         gap: 10px;
@@ -1023,15 +1011,181 @@ input[name="ssnBack"] {
 }
 
 @media screen and (max-width: 480px) {
-    .completeTitle { font-size: 1.6rem; }
-    .completeSubtitle { font-size: 1rem; }
+    .completeTitle { font-size: calc(1.6rem * var(--kiosk-font-scale, 1)); }
+    .completeSubtitle { font-size: calc(1rem * var(--kiosk-font-scale, 1)); }
     .ticketCard {
         max-width: 95%;
         padding: 30px 20px;
     }
-    .ticketNumber { font-size: 3rem; margin-bottom: 30px; }
-    .ticketRow { font-size: 0.9rem; }
-    .ticketValue { font-size: 1.1rem; }
+    .ticketNumber { font-size: calc(3rem * var(--kiosk-font-scale, 1)); margin-bottom: 30px; }
+    .ticketRow { font-size: calc(0.9rem * var(--kiosk-font-scale, 1)); }
+    .ticketValue { font-size: calc(1.1rem * var(--kiosk-font-scale, 1)); }
     .ticketDashes { margin: 0 10px; }
 }
 
+
+.infoCards {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap; /* 글자가 커져 카드가 넓어지면 줄바꿈 */
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px; /* 버튼과 카드 사이 간격 */
+    padding: 0 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 20px 12px;
+    text-align: center;
+    color: #333;
+    flex: 1 1 auto;
+    min-width: calc(140px * var(--kiosk-font-scale, 1));
+    max-width: calc(160px * var(--kiosk-font-scale, 1)); /* 배율에 맞춰 카드 폭도 확장 */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.cardTitle {
+    display: block;
+    font-size: calc(0.9rem * var(--kiosk-font-scale, 1));
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.cardValue {
+    display: block;
+    font-size: calc(1.8rem * var(--kiosk-font-scale, 1));
+    font-weight: 800;
+    color: #000;
+}
+
+/* 💡 접수 시작하기 버튼 스타일 */
+.buttonContainer {
+    display: flex;
+    flex-wrap: wrap; /* 글자가 커져 가로 폭이 부족하면 세로로 쌓임 */
+    gap: 1rem;
+    justify-content: center; /* 버튼들을 중앙 정렬 */
+    /* 하단 여백: 100%에서는 5rem 그대로, 배율이 커질수록 줄여 768px 높이에서도 150%가 한 화면에 들어가게 */
+    margin: 1rem 0 calc(5rem / var(--kiosk-font-scale, 1) / var(--kiosk-font-scale, 1)) 0;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.startButton, .startButton2 {
+    min-width: 12rem;
+    padding: 18px 1.5rem; /* 고정 폭 대신 텍스트 길이에 맞춰 확장 */
+    white-space: nowrap;
+    font-size: calc(1.2rem * var(--kiosk-font-scale, 1));
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.startButton {
+    background-color: #009d84;
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 157, 132, 0.3);
+}
+
+.startButton:active {
+    background-color: #00816c;
+}
+
+.startButton:disabled, .startButton2:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.startButton2 {
+    background-color: #ffffff;
+    color: #009d84;
+    border: 2px solid #009d84;
+    box-shadow: 0 4px 12px rgba(0, 157, 132, 0.1);
+}
+
+.startButton2:active {
+    background-color: #f0fdfa;
+}
+
+/* =========================================
+   1단계(첫 화면) 기기별 보정 - 기본 규칙보다 뒤에 와야 우선 적용됨
+   ========================================= */
+/* 📱 모바일: 헤더 공간이 부족하고 브라우저 자체 확대로 대체 가능하므로 확대 기능 비활성화 */
+@media screen and (max-width: 480px) {
+    .kioskContainer {
+        --kiosk-font-scale: 1;
+    }
+    .fontScaleControl {
+        display: none;
+    }
+    .title {
+        font-size: 2.6rem;
+        letter-spacing: -1px;
+    }
+    .subtitle {
+        font-size: 1rem;
+    }
+    /* 카드 3개를 한 줄에 유지 (세로로 길게 쌓이지 않도록) */
+    .infoCards {
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 0 12px;
+    }
+    .card {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: none;
+        padding: 14px 4px;
+    }
+    .cardTitle {
+        font-size: 0.8rem;
+    }
+    .cardValue {
+        font-size: 1.4rem;
+    }
+    /* 시작 버튼은 세로로 쌓되 가로를 꽉 채워 터치 영역 확보 */
+    .buttonContainer {
+        gap: 0.6rem;
+        margin-bottom: 2rem;
+    }
+    .startButton, .startButton2 {
+        flex: 1 1 100%;
+        min-width: 0;
+        padding: 14px 1rem;
+        font-size: 1.1rem;
+    }
+}
+
+/* 🖥️ 높이가 낮은 화면(노트북 720p, 가로 태블릿 등): 세로 여백과 제목 크기를 줄여 한 화면에 담기게 */
+@media screen and (max-height: 720px) and (min-width: 481px) {
+    .content {
+        padding: 16px 0 12px;
+    }
+    .progressIndicator {
+        margin-bottom: 12px;
+    }
+    .title {
+        font-size: min(calc(3.5rem * var(--kiosk-font-scale, 1)), 9vh);
+        margin-bottom: 12px;
+    }
+    .subtitle {
+        font-size: min(calc(1.2rem * var(--kiosk-font-scale, 1)), 3.4vh);
+    }
+    .card {
+        padding: 12px 12px;
+    }
+    .infoCards {
+        margin-bottom: 16px;
+    }
+    .buttonContainer {
+        margin: 0.5rem 0 1.5rem 0;
+    }
+    .startButton, .startButton2 {
+        padding: 12px 1.5rem;
+    }
+}

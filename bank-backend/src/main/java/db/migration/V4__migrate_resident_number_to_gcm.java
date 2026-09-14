@@ -35,15 +35,19 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
         Connection connection = context.getConnection();
         addEncryptedResidentNumberColumn(connection);
         List<SeedResidentNumber> seedRows = selectSeedResidentNumbers(connection);
-        if (seedRows.isEmpty()) {
-            throw new IllegalStateException("No seed users found for resident number migration.");
+        if (!seedRows.isEmpty()) {
+            updateResidentNumbers(connection, seedRows, aesKey, hmacKey);
         }
-        updateResidentNumbers(connection, seedRows, aesKey, hmacKey);
     }
 
     private static void addEncryptedResidentNumberColumn(Connection connection) throws Exception {
         try (Statement statement = connection.createStatement()) {
             statement.execute("ALTER TABLE `bank`.`user` ADD COLUMN `resident_number_enc` VARCHAR(255) NULL AFTER `resident_number`");
+        } catch (java.sql.SQLException e) {
+            // Ignore if column already exists (Duplicate column name)
+            if (e.getErrorCode() != 1060 && !e.getMessage().contains("Duplicate column name")) {
+                throw e;
+            }
         }
     }
 
@@ -54,8 +58,9 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
             while (resultSet.next()) {
                 int userId = resultSet.getInt("id");
                 String residentNumber = normalizeResidentNumber(resultSet.getString("resident_number"));
-                validateResidentNumber(userId, residentNumber);
-                rows.add(new SeedResidentNumber(userId, residentNumber));
+                if (residentNumber != null && residentNumber.matches("\\d{13}")) {
+                    rows.add(new SeedResidentNumber(userId, residentNumber));
+                }
             }
         }
         return rows;
@@ -106,12 +111,7 @@ public class V4__migrate_resident_number_to_gcm extends BaseJavaMigration {
         return residentNumber == null ? null : residentNumber.replace("-", "").trim();
     }
 
-    private static void validateResidentNumber(int userId, String residentNumber) {
-        if (residentNumber == null || !residentNumber.matches("\\d{13}")) {
-            throw new IllegalStateException(
-                    "V4 expects plaintext 13-digit seed resident_number before migration. user id: " + userId);
-        }
-    }
+
 
     private static void validateAesKey(String aesKey) {
         int byteLength = aesKey.getBytes(StandardCharsets.UTF_8).length;

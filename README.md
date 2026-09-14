@@ -36,6 +36,7 @@ AI 기반 통합 스마트 뱅킹 플랫폼. 고객 맞춤 금융 상품 추천,
 ## 실행 전 준비사항
 
 - MySQL 8.0+
+- Redis 6.0+ (세션 공유용)
 - Java 17+
 - Node.js 18+
 - Python 3.10+
@@ -43,6 +44,27 @@ AI 기반 통합 스마트 뱅킹 플랫폼. 고객 맞춤 금융 상품 추천,
 ---
 
 ## 실행 방법
+
+### 0. Redis 실행
+
+백엔드와 AI 서버 간의 세션 공유를 위해 Redis 서버가 반드시 로컬(포트 6379)에 실행되어 있어야 합니다.
+
+**Mac (Homebrew):**
+```bash
+brew services start redis
+```
+
+**Windows (WSL2):**
+```bash
+sudo apt-get update
+sudo apt-get install redis-server
+sudo service redis-server start
+```
+
+**Docker (Mac/Windows 공통):**
+```bash
+docker run -d --name redis-server -p 6379:6379 redis
+```
 
 ### 1. DB 설정
 
