@@ -36,42 +36,28 @@ public class TaskService {
         if (requestDto == null || userId == null) {
             return TaskResult.FAILURE;
         }
-        //유저의 id를 통해서 그 유저의 특정 업무를 조회하고 단 하나라도 IN_PROGRESS상태인 업무가
-        // 있을때 FAILURE_TASK_IN_PROGRESS를 return;
-
-        /*이제 사용자가 접수한 업무 중 현재 진행 중(IN_PROGRESS )이거나
-        대기 중(WAITING)인 업무가 있다면 FAILURE_TASK_PLURAL
-                (또는 FAILURE_TASK_IN_PROGRESS)이 반환되고, 이전에
-        COMPLETED된 업무만 있다면 정상적으로 새 업무를 접수할 수 있게 됨.*/
+        // 대기·호출·상담 중인 접수가 있으면 추가 접수를 막는다.
         List<TaskVo> userTasks = taskMapper.selectTasksByUserId(userId);
         if (userTasks != null && userTasks.stream()
                 .anyMatch(task -> "IN_PROGRESS".equals(task.getStatus()))) {
             return TaskResult.FAILURE_TASK_IN_PROGRESS;
         }
-        // 이미 대기중(WAITING)이거나 진행중(IN_PROGRESS)인 업무가 있으면 추가 접수 불가
         if (userTasks != null && userTasks.stream()
-                .anyMatch(task -> "WAITING".equals(task.getStatus()) || "IN_PROGRESS".equals(task.getStatus()))) {
+                .anyMatch(task -> "WAITING".equals(task.getStatus()) || "CALLED".equals(task.getStatus())
+                        || "IN_PROGRESS".equals(task.getStatus()))) {
             return TaskResult.FAILURE_TASK_PLURAL;
         }
 
         String taskType = requestDto.getTaskType();
-        String prefix;
         String assignedLevel;
-        int processingTime;
         int minLevel;
 
         // 1. 업무 유형별 설정
         if ("빠른 업무".equals(taskType)) {
-            prefix = "A";
-            processingTime = 5;
             minLevel = 1;
         } else if ("상담 업무".equals(taskType)) {
-            prefix = "B";
-            processingTime = 10;
             minLevel = 3;
         } else { // 기업 • 특수
-            prefix = "C";
-            processingTime = 25;
             minLevel = 5;
         }
 
@@ -79,14 +65,10 @@ public class TaskService {
         minLevel = getMinLevelByTaskDetailType(requestDto.getTaskDetailType(), minLevel);
         assignedLevel = "LEVEL_" + minLevel;
 
-        // 2. 대기표 번호 생성 (A-001)
-        String lastTicket = taskMapper.selectLastTicketNumber(prefix);
-        int nextNum = 1;
-        if (lastTicket != null) {
-            String numPart = lastTicket.split("-")[1];
-            nextNum = Integer.parseInt(numPart) + 1;
-        }
-        String ticketNumber = String.format("%s-%03d", prefix, nextNum);
+        // 2. AI 접수와 같은 일별 숫자 번호를 사용한다. 발급일과 접수 시각은 DB 시계로 고정한다.
+        LocalDateTime issuedAt = taskMapper.selectTicketIssueTime();
+        taskMapper.incrementDailyTicketNumber(issuedAt.toLocalDate());
+        String ticketNumber = String.valueOf(taskMapper.selectDailyTicketNumber(issuedAt.toLocalDate()));
 
         // 3. 직원 배정 (가중 대기시간 기준 가장 한가한 직원)
         Integer memberId = taskMapper.selectAvailableMemberId(minLevel);
@@ -106,8 +88,8 @@ public class TaskService {
                 .status(TaskStatus.WAITING.name())
                 .memberId(memberId)
                 .ranking(ranking)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(issuedAt)
+                .updatedAt(issuedAt)
                 .isAi(Boolean.FALSE)
                 .build();
 
@@ -197,28 +179,47 @@ public class TaskService {
         return taskMapper.selectTasksByMemberLevel(memberId, memberLevel);
     }
     @Transactional
-    public TaskResult updateTaskStatus(MemberEntity actor, Long taskId, String status, String actualDetail) {
+    public TaskResult updateTaskStatus(MemberEntity actor, Long taskId, String status) {
+        return changeTaskStatus(actor, taskId, status, false);
+    }
+
+    @Transactional
+    public TaskResult recallTask(MemberEntity actor, Long taskId) {
+        return changeTaskStatus(actor, taskId, "CALLED", true);
+    }
+
+    public List<Map<String, Object>> getQueueDisplay() {
+        return taskMapper.selectQueueDisplay();
+    }
+
+    private TaskResult changeTaskStatus(MemberEntity actor, Long taskId, String status, boolean recall) {
         if (actor == null || actor.getId() == null) return TaskResult.FAILURE_SESSION;
         if (taskId == null || status == null) return TaskResult.FAILURE;
+        // Serialize calls at this counter, including requests from multiple browser tabs.
+        MemberEntity workingMember = taskMapper.selectMemberForUpdate(actor.getId().intValue());
         TaskEntity task = taskMapper.selectTaskForUpdate(taskId);
         if (task == null) return TaskResult.FAILURE;
         if (!Objects.equals(task.getMemberId(), actor.getId().intValue())) return TaskResult.FAILURE_NOT_ALLOWED;
-        boolean accepting = "IN_PROGRESS".equals(status) && "WAITING".equals(task.getStatus());
+        boolean calling = !recall && "CALLED".equals(status) && "WAITING".equals(task.getStatus());
+        boolean recalling = recall && "CALLED".equals(task.getStatus());
+        boolean accepting = !recall && "IN_PROGRESS".equals(status) && "CALLED".equals(task.getStatus());
         boolean cancelling = "WAITING".equals(status) && "IN_PROGRESS".equals(task.getStatus());
         boolean completing = "COMPLETED".equals(status) && "IN_PROGRESS".equals(task.getStatus());
-        if (!accepting && !cancelling && !completing) return TaskResult.FAILURE_INVALID_STATUS;
-        TaskRouting.Route route = TaskRouting.find(completing ? actualDetail : task.getTaskDetailType());
-        if (route == null) return TaskResult.FAILURE_INVALID_TASK_TYPE;
+        boolean noShow = "NO_SHOW".equals(status) && "CALLED".equals(task.getStatus());
+        if (!calling && !recalling && !accepting && !cancelling && !completing && !noShow) return TaskResult.FAILURE_INVALID_STATUS;
+        if (accepting && TaskRouting.find(task.getTaskDetailType()) == null) return TaskResult.FAILURE_INVALID_TASK_TYPE;
         // Assignment authorizes this task, including fallback to the highest-level remaining staff.
         // Recheck working status, but do not require the assignee to meet the routing level again.
-        if (!cancelling && !isWorkingMember(taskMapper.selectMemberForUpdate(actor.getId().intValue())))
+        if (!cancelling && !isWorkingMember(workingMember))
             return TaskResult.FAILURE_TARGET_UNAVAILABLE;
+        if ((calling || accepting) && taskMapper.selectOtherActiveTaskForUpdate(actor.getId().intValue(), taskId) != null)
+            return TaskResult.FAILURE_TASK_IN_PROGRESS;
         task.setStatus(status);
-        if (completing) applyConfirmedTask(task, route, actor.getId().intValue());
+        // Closing a visit does not confirm the prediction or the actual work performed.
         if (taskMapper.updateTaskOutcome(task) != 1) throw new IllegalStateException("Task update failed");
         if (taskMapper.insertTaskAction(taskId, actor.getId().intValue(),
-                completing ? "COMPLETE" : accepting ? "START_PROCESSING" : "CANCEL_ACCEPT",
-                completing ? "실제 처리 업무 확인: " + actualDetail : accepting ? "업무 수락" : "수락 취소 (거래 취소 아님)") != 1)
+                calling ? "CALL" : recalling ? "RECALL" : completing ? "CLOSE" : noShow ? "NO_SHOW" : accepting ? "START_PROCESSING" : "CANCEL_ACCEPT",
+                calling ? "고객 호출" : recalling ? "고객 재호출" : completing ? "업무 종료" : noShow ? "미방문으로 접수 종료" : accepting ? "상담 시작" : "수락 취소 (거래 취소 아님)") != 1)
             throw new IllegalStateException("Task action log failed");
         return TaskResult.SUCCESS;
     }
@@ -227,8 +228,8 @@ public class TaskService {
         TaskVo task = taskId == null ? null : taskMapper.getTask(taskId);
         if (actor == null || actor.getId() == null || task == null || !Objects.equals(task.getMemberId(), actor.getId().intValue()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        if (!List.of("WAITING", "IN_PROGRESS").contains(task.getStatus()))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 종료된 업무입니다.");
+        if (!"IN_PROGRESS".equals(task.getStatus()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "상담 중인 업무만 이관할 수 있습니다. 상담 시작 후 방문 목적을 확인해주세요.");
         TaskRouting.Route route = TaskRouting.find(detail);
         if (route == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 업무입니다.");
         return taskMapper.selectTransferCandidates(route.minLevel(), task.getMemberId());
@@ -252,7 +253,8 @@ public class TaskService {
         TaskEntity task = taskMapper.selectTaskForUpdate(request.taskId());
         if (task == null) return TaskResult.FAILURE;
         if (adminId == null && !Objects.equals(task.getMemberId(), actorId)) return TaskResult.FAILURE_NOT_ALLOWED;
-        if (!List.of("WAITING", "IN_PROGRESS").contains(task.getStatus())) return TaskResult.FAILURE_INVALID_STATUS;
+        if (!List.of("WAITING", "CALLED", "IN_PROGRESS").contains(task.getStatus())) return TaskResult.FAILURE_INVALID_STATUS;
+        if (adminId == null && !"IN_PROGRESS".equals(task.getStatus())) return TaskResult.FAILURE_INVALID_STATUS;
         if (Objects.equals(task.getMemberId(), request.targetMemberId())) return TaskResult.FAILURE_TARGET_UNAVAILABLE;
         String detail = adminId == null ? request.actualTaskDetailType() : task.getTaskDetailType();
         TaskRouting.Route route = TaskRouting.find(detail);
@@ -264,6 +266,10 @@ public class TaskService {
         if (!canHandle(target, route)) return TaskResult.FAILURE_TARGET_UNAVAILABLE;
         Integer previousMember = task.getMemberId();
         String previousDetail = task.getTaskDetailType();
+        // Consultation grants priority; moving an already-prioritized customer keeps it.
+        // At each receiving counter, join behind customers already waiting with priority.
+        if ((adminId == null && "IN_PROGRESS".equals(task.getStatus())) || task.getPriorityTransferredAt() != null)
+            task.setPriorityTransferredAt(LocalDateTime.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
         if (adminId == null) applyConfirmedTask(task, route, actorId);
         task.setMemberId(request.targetMemberId());
         task.setStatus("WAITING");
@@ -305,6 +311,11 @@ public class TaskService {
 
     @Transactional
     public void reassignTasksOnMemberLogout(Long memberId) {
+        taskMapper.selectMemberForUpdate(memberId.intValue());
+        if (taskMapper.selectOtherActiveTaskForUpdate(memberId.intValue(), -1L) != null)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "호출 중이거나 상담 중인 고객을 먼저 처리해주세요.");
+        // Closing the counter and reassigning its waiting queue share the call lock.
+        taskMapper.markMemberOffDuty(memberId.intValue());
         List<TaskEntity> waitingTasks = taskMapper.selectWaitingTasksByMemberId(memberId);
         if (waitingTasks == null || waitingTasks.isEmpty()) return;
 

@@ -29,5 +29,6 @@ public class TaskEntity {
     private String confirmedTaskDetailType;
     private Integer confirmedBy;
     private LocalDateTime confirmedAt;
+    private LocalDateTime priorityTransferredAt;
 
 }

@@ -9,8 +9,7 @@ const ERROR_MESSAGES = {
     FAILURE_TARGET_UNAVAILABLE: '해당 직원이 현재 업무를 처리할 수 없습니다. 근무 상태와 업무 권한을 확인해주세요.',
 };
 
-export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' }) {
-    const isTransfer = mode === 'transfer';
+export default function TossModal({ task, onClose, onSuccess }) {
     const taskId = task.taskId;
     const [taskTypes, setTaskTypes] = useState([]);
     const [typeError, setTypeError] = useState('');
@@ -25,7 +24,7 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
     const selectRef = useRef(null);
     const dialogRef = useRef(null);
     const requestKey = `${taskId}:${actualDetail}:${refresh}`;
-    const isLoading = isTransfer && candidates.key !== requestKey;
+    const isLoading = candidates.key !== requestKey;
 
     useEffect(() => {
         const controller = new AbortController();
@@ -41,7 +40,7 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
     }, []);
 
     useEffect(() => {
-        if (!isTransfer || !actualDetail) return;
+        if (!actualDetail) return;
         const controller = new AbortController();
         const query = new URLSearchParams({ taskId, actualTaskDetailType: actualDetail });
         fetch(`/api/kiosk/transfer-candidates?${query}`, { signal: controller.signal })
@@ -54,7 +53,7 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
                 if (err.name !== 'AbortError') setCandidates({ key: requestKey, rows: [], error: err.message });
             });
         return () => controller.abort();
-    }, [isTransfer, actualDetail, taskId, requestKey]);
+    }, [actualDetail, taskId, requestKey]);
 
     const submit = async event => {
         event.preventDefault();
@@ -63,21 +62,20 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
         setIsSubmitting(true);
         setError('');
         try {
-            const query = new URLSearchParams({ status: 'COMPLETED', actualTaskDetailType: actualDetail });
-            const response = await fetch(isTransfer ? '/api/kiosk/toss' : `/api/member/task/${taskId}/status?${query}`, {
+            const response = await fetch('/api/kiosk/toss', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                ...(isTransfer ? { body: JSON.stringify({ taskId, targetMemberId: Number(staffId), actualTaskDetailType: actualDetail, reason: reason.trim() }) } : {}),
+                body: JSON.stringify({ taskId, targetMemberId: Number(staffId), actualTaskDetailType: actualDetail, reason: reason.trim() }),
             });
             const data = await response.json();
             if (!response.ok || data.result !== 'SUCCESS') {
-                if (data.result === 'FAILURE_TARGET_UNAVAILABLE' && isTransfer) {
+                if (data.result === 'FAILURE_TARGET_UNAVAILABLE') {
                     setStaffId('');
                     setRefresh(value => value + 1);
                 }
                 throw new Error(ERROR_MESSAGES[data.result] || '처리하지 못했습니다. 업무 상태를 확인하고 다시 시도해주세요.');
             }
-            await onSuccess?.(taskId, isTransfer ? '이관되었습니다.' : '종료되었습니다.');
+            await onSuccess?.(taskId, '이관되었습니다.');
             onClose();
         } catch (err) {
             setError(err.message || '서버에 연결할 수 없습니다. 다시 시도해주세요.');
@@ -98,13 +96,13 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
     };
 
     const ready = taskTypes.some(type => type.detailType === actualDetail)
-        && (!isTransfer || (!isLoading && candidates.rows.some(staff => String(staff.id) === staffId) && reason.trim()));
+        && !isLoading && candidates.rows.some(staff => String(staff.id) === staffId) && reason.trim();
 
     return (
         <div className={styles.modalOverlay}>
             <form ref={dialogRef} className={styles.modalContainer} role="dialog" aria-modal="true" aria-labelledby="task-outcome-title"
                 onKeyDown={handleDialogKeyDown} onSubmit={submit}>
-                <header className={styles.header}><h1 id="task-outcome-title">{isTransfer ? '업무 이관' : '업무 종료 확인'}</h1></header>
+                <header className={styles.header}><h1 id="task-outcome-title">업무 이관</h1></header>
                 <div className={styles.content}>
                     <div className={styles.customerCard}>
                         <strong>{task.userName || '고객'} · {task.ticketNumber}</strong>
@@ -112,14 +110,13 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
                         {task.predictedTaskDetailType && <p>최초 AI 예상 업무: {task.predictedTaskDetailType}</p>}
                     </div>
                     <div className={styles.section}>
-                        <label className={styles.label} htmlFor="actual-task">{isTransfer ? '확인된 실제 업무' : '실제로 처리한 업무'}</label>
+                        <label className={styles.label} htmlFor="actual-task">확인된 실제 업무</label>
                         <select ref={selectRef} id="actual-task" value={actualDetail} disabled={isSubmitting || !taskTypes.length} required
                             onChange={event => { setActualDetail(event.target.value); setStaffId(''); setError(''); }}>
                             <option value="">업무를 선택해주세요</option>
                             {taskTypes.map(type => <option key={type.detailType} value={type.detailType}>{type.detailType}</option>)}
                         </select>
                     </div>
-                    {isTransfer ? <>
                         <div className={styles.section}>
                             <label className={styles.label} htmlFor="target-staff">이관받을 직원</label>
                             <select id="target-staff" value={staffId} onChange={event => setStaffId(event.target.value)}
@@ -137,14 +134,13 @@ export default function TossModal({ task, onClose, onSuccess, mode = 'transfer' 
                             <textarea id="transfer-reason" value={reason} onChange={event => setReason(event.target.value)}
                                 maxLength={1000} required rows={3} disabled={isSubmitting} placeholder="방문 목적과 다음 담당자가 알아야 할 내용을 적어주세요." />
                         </div>
-                        <p className={styles.help}>기존 번호표와 최초 접수 시간을 유지하며, 이관된 창구의 대기열로 이동합니다.</p>
-                    </> : <p className={styles.help}>고객과 확인한 실제 업무를 선택한 뒤 종료해주세요. 추가 상담이나 이관이 필요하면 닫기를 눌러 계속 진행하세요.</p>}
+                        <p className={styles.help}>기존 번호표와 최초 접수 시간을 유지합니다. 진행 중인 상담 다음에 우선 대기하며, 먼저 이관된 고객부터 안내합니다.</p>
                     {(error || typeError) && <p role="alert" className={styles.error}>{error || typeError}</p>}
                 </div>
                 <footer className={styles.footer}>
                     <button type="button" className={styles.btnClose} onClick={onClose} disabled={isSubmitting}>닫기</button>
                     <button type="submit" className={styles.btnSubmit} disabled={isSubmitting || !ready}>
-                        {isSubmitting ? '처리 중…' : isTransfer ? '업무 이관' : '확인하고 종료'}
+                        {isSubmitting ? '처리 중…' : '업무 이관'}
                     </button>
                 </footer>
             </form>

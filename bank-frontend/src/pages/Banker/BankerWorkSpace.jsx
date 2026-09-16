@@ -71,7 +71,8 @@ const BankerWorkSpace = () => {
     ]);
     const [isTossModalOpen, setIsTossModalOpen] = useState(false);
     const [taskToToss, setTaskToToss] = useState(null);
-    const [outcomeMode, setOutcomeMode] = useState('transfer'); // 어떤 업무를 이관할지 저장
+    const [pendingTaskId, setPendingTaskId] = useState(null);
+    const actionPending = useRef(false);
 
     const [selectedWorkType, setSelectedWorkType] = useState(null);
     const [lastTaskPage, setLastTaskPage] = useState(1);
@@ -157,6 +158,7 @@ const BankerWorkSpace = () => {
     };
 
     const handleTaskMenuSelect = (taskTitle, pageNumber) => {
+        if (selectedTask?.status !== 'IN_PROGRESS') return;
         // TaskSelect에서 넘어온 제목에 따라 mapping
 
         setLastTaskPage(pageNumber);
@@ -487,9 +489,10 @@ const BankerWorkSpace = () => {
         if (selectedTask) {
             const currentTaskInList = tasks.find(t => t.taskId === selectedTask.taskId);
 
-            if (!currentTaskInList || currentTaskInList.status === 'COMPLETED') {
+            if (!currentTaskInList || !['WAITING', 'CALLED', 'IN_PROGRESS'].includes(currentTaskInList.status)) {
                 setSelectedTask(null);
                 setSelectedWorkType(null);
+                setNote('');
             } else {
                 if(currentTaskInList.status !== selectedTask.status) {
                     setSelectedTask(currentTaskInList);
@@ -503,8 +506,11 @@ const BankerWorkSpace = () => {
     if (!user) return null;
 
     const handleLogout = async () => {
-        await logout();
-        navigate('/adminlogin');
+        if (tasks.some(task => ['CALLED', 'IN_PROGRESS'].includes(task.status))) {
+            showAlert('호출 중이거나 상담 중인 고객이 있습니다. 고객 응대를 마친 후 로그아웃해주세요.');
+            return;
+        }
+        if (await logout()) navigate('/adminlogin');
     };
 
     /*채팅 전송 함수*/
@@ -596,62 +602,7 @@ const BankerWorkSpace = () => {
         }
     };
 
-    // 업무 수락 취소 (IN_PROGRESS -> WAITING)
-    const performCancelAcceptTask = async (task) => {
-        try {
-            const response = await fetch(`/api/member/task/${task.taskId}/status?status=WAITING`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) {
-                showAlert('서버 오류 발생');
-                return;
-            }
-
-            const data = await response.json();
-
-            switch (data.result) {
-                case 'SUCCESS':
-                { const updatedTask = { ...task, status: 'WAITING' };
-                    setSelectedTask(updatedTask);
-                    setTasks(prevTasks => prevTasks.map(t => t.taskId === task.taskId ? updatedTask : t));
-                    setSelectedWorkType(null);
-                    await fetchTasks();
-                    break; }
-
-                case 'FAILURE_SESSION':
-                    openModal({
-                        title: '알림',
-                        message: `세션이 만료되었습니다. 다시 로그인해주세요.`,
-                        confirmText: '확인',
-                        onConfirm: () =>  navigate("adminlogin")
-                    });
-                    break;
-
-                case 'FAILURE':
-                default:
-                    showAlert(`수락 취소 실패: ${data.result}`);
-                    break;
-            }
-        } catch (error) {
-            console.error('Error canceling task:', error);
-            showAlert('오류가 발생했습니다.');
-        }
-    };
-
     // 업무 기록 저장 함수
-    const handleCancelAcceptTask = (task) => {
-        if (!task?.taskId) return;
-        openModal({
-            title: '수락 취소',
-            message: '업무 수락을 취소하고 대기열로 되돌리시겠습니까? 이미 처리한 거래는 취소되지 않습니다.',
-            confirmText: '수락 취소',
-            cancelText: '계속 처리',
-            onConfirm: () => performCancelAcceptTask(task)
-        });
-    };
-
     const handlePostLog = async (idValue) => {
         if (!note.trim()) {
             return;
@@ -689,10 +640,10 @@ const BankerWorkSpace = () => {
         const selectedValue = e.target.value;
         const nextStatus = selectedValue === 'working';
 
-        const hasInProgressTask = tasks.some(task => task.status === 'IN_PROGRESS');
+        const hasInProgressTask = tasks.some(task => ['CALLED', 'IN_PROGRESS'].includes(task.status));
 
         if (!nextStatus && hasInProgressTask) {
-            showAlert('현재 처리 중인 업무가 있습니다. 업무를 종료한 후 자리 비움 상태로 변경해주세요.');
+            showAlert('호출 중이거나 상담 중인 고객이 있습니다. 고객 응대를 마친 후 자리 비움 상태로 변경해주세요.');
             return;
         }
 
@@ -723,7 +674,9 @@ const BankerWorkSpace = () => {
                 setIsWorking(!nextStatus);
                 openModal({
                     title: '변경 실패',
-                    message: '상태 변경에 실패했습니다. 다시 시도해 주세요.',
+                    message: data.result === 'FAILURE_NOT_ALLOWED'
+                        ? '호출 중이거나 상담 중인 고객을 먼저 처리해주세요.'
+                        : '상태 변경에 실패했습니다. 다시 시도해 주세요.',
                     confirmText: '확인'
                 });
             }
@@ -738,74 +691,46 @@ const BankerWorkSpace = () => {
         }
     };
 
-    // 업무 수락 (WAITING -> IN_PROGRESS)
-    const handleAcceptTask = async (task) => {
+    // Calling does not start the consultation. Only staff confirm arrival.
+    const handleTaskAction = async (task, status, recall = false) => {
+        if (!task?.taskId || actionPending.current) return;
         if (!isWorking) {
-            showAlert('근무 상태를 근무중으로 변경한 뒤 업무를 수락해주세요.');
+            showAlert('근무 상태와 창구 배정을 확인해주세요.');
             return;
         }
+        actionPending.current = true;
+        setPendingTaskId(task.taskId);
         try {
-            const response = await fetch(`/api/member/task/${task.taskId}/status?status=IN_PROGRESS`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (!response.ok) {
-                showAlert('서버 오류 발생');
-                return;
-            }
-
+            const url = recall
+                ? `/api/member/task/${task.taskId}/recall`
+                : `/api/member/task/${task.taskId}/status?status=${status}`;
+            const response = await fetch(url, { method: recall ? 'POST' : 'PATCH' });
             const data = await response.json();
-
-            switch (data.result) {
-                case 'SUCCESS':
-                {
-                    const updatedTask = { ...task, status: 'IN_PROGRESS' };
-                    setSelectedTask(updatedTask);
-                    setTasks(prevTasks => prevTasks.map(t => t.taskId === task.taskId ? updatedTask : t));
-                    await fetchTasks();
-
-                    break;
-                }
-
-                case 'FAILURE_TASK_IN_PROGRESS':
-                case 'FAILURE_INVALID_STATUS':
-                case 'FAILURE_NOT_ALLOWED':
-                    showAlert('이미 다른 담당자가 처리 중인 업무입니다.');
-                    await fetchTasks();
-                    break;
-
-                case 'FAILURE_TARGET_UNAVAILABLE':
-                    showAlert('현재 근무 상태와 창구 배정을 확인해주세요.');
-                    break;
-
-                case 'FAILURE_SESSION':
-
-                    openModal({
-                        title: '알림',
-                        message: `세션이 만료되었습니다. 다시 로그인해주세요.`,
-                        confirmText: '확인',
-                        onConfirm: () =>  navigate("adminlogin")
-                    });
-                    break;
-
-                case 'FAILURE':
-                default:
-                    showAlert('업무 수락에 실패했습니다.');
-                    break;
+            if (!response.ok || data.result !== 'SUCCESS') {
+                const messages = {
+                    FAILURE_SESSION: '로그인 정보가 만료되었습니다. 다시 로그인해주세요.',
+                    FAILURE_NOT_ALLOWED: '현재 담당한 고객만 처리할 수 있습니다.',
+                    FAILURE_INVALID_STATUS: '고객 상태가 변경되었습니다. 대기열을 다시 확인해주세요.',
+                    FAILURE_TASK_IN_PROGRESS: '호출 중이거나 상담 중인 고객을 먼저 처리해주세요.',
+                    FAILURE_TARGET_UNAVAILABLE: '근무 상태와 창구 배정을 확인해주세요.',
+                };
+                await fetchTasks();
+                throw new Error(messages[data.result] || '처리하지 못했습니다. 다시 시도해주세요.');
             }
+            if (['COMPLETED', 'NO_SHOW'].includes(status)) {
+                setTasks(current => current.filter(item => item.taskId !== task.taskId));
+            } else {
+                const updatedTask = { ...task, status };
+                setSelectedTask(updatedTask);
+                setTasks(current => current.map(item => item.taskId === task.taskId ? updatedTask : item));
+            }
+            await fetchTasks();
         } catch (error) {
-            console.error('Error accepting task:', error);
-            showAlert('오류가 발생했습니다.');
+            showAlert(error.message || '서버에 연결할 수 없습니다. 다시 시도해주세요.');
+        } finally {
+            actionPending.current = false;
+            setPendingTaskId(null);
         }
-    };
-
-    const handleCompleteTask = (taskToComplete) => {
-        const targetTask = taskToComplete || selectedTask;
-        if (!targetTask) return;
-        setOutcomeMode('complete');
-        setTaskToToss(targetTask);
-        setIsTossModalOpen(true);
     };
 
     const handleOutcomeSuccess = async (taskId, message) => {
@@ -819,7 +744,10 @@ const BankerWorkSpace = () => {
     };
 
     // 대기 중인 업무와 처리 중인 업무 모두 표시
-    const visibleTasks = tasks.filter(task => task.status === 'WAITING' || task.status === 'IN_PROGRESS');
+    const visibleTasks = tasks.filter(task => ['WAITING', 'CALLED', 'IN_PROGRESS'].includes(task.status));
+    const hasActiveCustomer = tasks.some(task => ['CALLED', 'IN_PROGRESS'].includes(task.status));
+    const selectedQueueTask = tasks.find(task => task.taskId === selectedTask?.taskId) || selectedTask;
+    const customerNotes = logList.filter(log => !['CALL', 'RECALL', 'START_PROCESSING', 'CANCEL_ACCEPT'].includes(log.actionType));
 
     // 연령대 계산 로직 추가
     const determineAgeGroup = (age) => {
@@ -858,6 +786,7 @@ const BankerWorkSpace = () => {
 
                         <div className={styles.headerRightContainer}>
                             <div className={styles.headerRight}>
+                                <a className={styles.headerBtn} href="/queue-display" target="_blank" rel="noopener noreferrer">번호판</a>
                                 <select className={styles.statusSelect}
                                 value={isWorking ? 'working' : 'away'}
                                 onChange={handleStatusChange}>
@@ -914,6 +843,11 @@ const BankerWorkSpace = () => {
                                                 <span className={styles.time}>🕗 {task.createdAt ? new Date(task.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                                                 <span className={styles.taskLine}></span>
                                                 <span className={styles.task}>{task.taskDetailType}</span>
+                                                {task.status === 'CALLED' && <span className={styles.queuePosition}>호출 중 · 도착 대기</span>}
+                                                {task.status === 'IN_PROGRESS' && <span className={styles.queuePosition}>상담 중</span>}
+                                                {task.status === 'WAITING' && <span className={styles.queuePosition}>
+                                                    {task.priorityTransfer ? '이관 우선 · ' : ''}대기 {task.ranking}번째
+                                                </span>}
                                             </div>
                                             <div className={styles.riskBarContainer}>
                                                 <div className={styles.riskBar} style={{ width: '0%' }}>0%</div>
@@ -924,9 +858,9 @@ const BankerWorkSpace = () => {
                                                     <>
                                                         <button
                                                             className={styles.btnToss}
+                                                            disabled={pendingTaskId !== null}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                setOutcomeMode('transfer');
                                                                 setTaskToToss(task);
                                                                 setIsTossModalOpen(true);
                                                             }}
@@ -935,41 +869,37 @@ const BankerWorkSpace = () => {
                                                         </button>
                                                         <button
                                                             className={styles.btnAccept}
+                                                            disabled={pendingTaskId !== null}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleCompleteTask(task);
+                                                                handleTaskAction(task, 'COMPLETED');
                                                             }}
                                                         >
                                                             업무 종료
                                                         </button>
-                                                        <details className={styles.taskMore} onClick={e => e.stopPropagation()}>
-                                                            <summary aria-label="추가 업무 동작">더보기</summary>
-                                                            <button type="button" onClick={() => handleCancelAcceptTask(task)}>수락 취소</button>
-                                                        </details>
                                                     </>
-                                                ) : (
+                                                ) : task.status === 'CALLED' ? (
                                                     <>
-                                                    <button
-                                                        className={styles.btnAccept}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleAcceptTask(task);
-                                                        }}
-                                                    >
-                                                        업무 수락
-                                                    </button>
-                                                        <button
-                                                            className={styles.btnToss}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setOutcomeMode('transfer');
-                                                                setTaskToToss(task); // 이관할 태스크 저장
-                                                                setIsTossModalOpen(true); // 모달 열기
-                                                            }}
-                                                        >
-                                                            업무 이관
+                                                        <button className={styles.btnAccept} disabled={pendingTaskId !== null}
+                                                            onClick={(e) => { e.stopPropagation(); handleTaskAction(task, 'IN_PROGRESS'); }}>
+                                                            상담 시작
+                                                        </button>
+                                                        <button className={styles.btnToss} disabled={pendingTaskId !== null}
+                                                            onClick={(e) => { e.stopPropagation(); handleTaskAction(task, 'NO_SHOW'); }}>
+                                                            미방문
+                                                        </button>
+                                                        <button className={styles.btnRecall} disabled={pendingTaskId !== null}
+                                                            onClick={(e) => { e.stopPropagation(); handleTaskAction(task, 'CALLED', true); }}>
+                                                            다시 호출
                                                         </button>
                                                     </>
+                                                ) : (
+                                                    <button className={styles.btnAccept}
+                                                        disabled={pendingTaskId !== null || hasActiveCustomer || !isWorking}
+                                                        title={hasActiveCustomer ? '현재 호출 또는 상담 중인 고객을 먼저 처리해주세요.' : undefined}
+                                                        onClick={(e) => { e.stopPropagation(); handleTaskAction(task, 'CALLED'); }}>
+                                                        고객 호출
+                                                    </button>
                                                 )}
                                             </div>
                                         </div>
@@ -1004,17 +934,12 @@ const BankerWorkSpace = () => {
                                                 <h2>{selectedTask.userName} <small>{selectedTask.ticketNumber}</small></h2>
                                             </div>
                                             <div className={styles.detailRisk}>
-                                                예상 대기 시간 <strong>{selectedTask.expectedWaitingTime}분</strong>
+                                                예상 대기 시간 <strong>{selectedQueueTask.expectedWaitingTime}분</strong>
                                             </div>
                                         </div>
                                         <div className={styles.accountList}>
-                                            {selectedTask.predictedTaskDetailType && <p className={styles.taskPurpose}>
-                                                최초 AI 예상: {selectedTask.predictedTaskDetailType}
-                                                {selectedTask.confirmedTaskDetailType && <> · 직원 확인: <strong>{selectedTask.confirmedTaskDetailType}</strong></>}
-                                                {selectedTask.transferCount > 0 && <> · 이관 {selectedTask.transferCount}회</>}
-                                            </p>}
                                             <div className={styles.accountCard}>
-                                                {selectedWorkType === "TASK_SELECT" ? (
+                                                {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "TASK_SELECT" ? (
                                                     <TaskSelect
                                                         initialPage={lastTaskPage}
                                                         onSelectTask={(taskTitle, pageNumber) => handleTaskMenuSelect(taskTitle, pageNumber)}
@@ -1035,36 +960,8 @@ const BankerWorkSpace = () => {
                                                             </>
                                                         )}
 
-                                                        {!selectedWorkType && (
-                                                            selectedTask.status === 'WAITING' ? (
-                                                                <button
-                                                                    className={styles.btnStart}
-                                                                    style={{ marginTop: "10px" }}
-                                                                    onClick={() => handleAcceptTask(selectedTask)}
-                                                                >
-                                                                    업무 수락
-                                                                </button>
-                                                            ) : (
-                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-                                                                    <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
-                                                                        <button className={styles.btnToss} onClick={() => {
-                                                                            setOutcomeMode('transfer');
-                                                                            setTaskToToss(selectedTask);
-                                                                            setIsTossModalOpen(true);
-                                                                        }}>업무 이관</button>
-                                                                        <button
-                                                                            className={styles.btnAccept}
-                                                                            onClick={() => handleCompleteTask(selectedTask)}
-                                                                        >
-                                                                            업무 종료
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )
-                                                        )}
-
                                                         {/*입출금 (일반 예금) 계좌개설*/}
-                                                        {selectedWorkType === "ACCOUNT_CREATE" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "ACCOUNT_CREATE" && (
                                                             <AccountCreateForm
                                                                 accountAlias={accountAlias}
                                                                 setAccountAlias={setAccountAlias}
@@ -1080,7 +977,7 @@ const BankerWorkSpace = () => {
                                                             />
                                                         )}
                                                         {/*법인등록*/}
-                                                        {selectedWorkType === "CORPORATE_REGISTER" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CORPORATE_REGISTER" && (
                                                             <UpdateCorporate
                                                                 selectedTask={selectedTask}
                                                                 onComplete={() => {
@@ -1091,7 +988,7 @@ const BankerWorkSpace = () => {
                                                             />                                                        )}
 
                                                         {/*입금*/}
-                                                        {selectedWorkType === "DEPOSIT" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "DEPOSIT" && (
                                                             <Deposit
                                                                 taskId={selectedTask?.id || selectedTask?.taskId || 0}
                                                                 selectedTask={selectedTask}
@@ -1104,7 +1001,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*출금*/}
-                                                        {selectedWorkType === "WITHDRAW" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "WITHDRAW" && (
                                                             <Withdraw
                                                                 taskId={selectedTask?.id}
                                                                 selectedTask={selectedTask}
@@ -1117,7 +1014,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*이체*/}
-                                                        {selectedWorkType === "TRANSFER" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "TRANSFER" && (
                                                             <Transfer
                                                                 taskId={selectedTask?.id}
                                                                 selectedTask={selectedTask}
@@ -1131,7 +1028,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*카드수령*/}
-                                                        {selectedWorkType === "CARD" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CARD" && (
                                                             <Card
                                                                 selectedTask={selectedTask}
                                                                 onSuccess={() => {
@@ -1144,7 +1041,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*통장비번변경*/}
-                                                        {selectedWorkType === "CHANGE-PASSWORD" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CHANGE-PASSWORD" && (
                                                             <ChangePassword
                                                                 onComplete={() => {
                                                                     const finalId = selectedTask?.id || selectedTask?.taskId || selectedTask;
@@ -1157,7 +1054,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*상담업무 / 예적금계좌개설*/}
-                                                        {selectedWorkType === "ACCOUNTS" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "ACCOUNTS" && (
                                                             <Accounts
                                                                 selectedTask={selectedTask}
                                                                 onCreate={() => {
@@ -1170,7 +1067,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*대출상환*/}
-                                                        {selectedWorkType === "LOAN-PAYMENT" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "LOAN-PAYMENT" && (
                                                             <LoanPayment
                                                                 selectedTask={selectedTask}
                                                                 onCreate={() => {
@@ -1183,7 +1080,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*금융상품가입*/}
-                                                        {selectedWorkType === "FINANCIAL-PRODUCT" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "FINANCIAL-PRODUCT" && (
                                                             <FinancialProduct
                                                                 selectedTask={selectedTask}
                                                                 onSubmit={() => {
@@ -1196,7 +1093,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*기업대출*/}
-                                                        {selectedWorkType === "CORPORATE-LOAN" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CORPORATE-LOAN" && (
                                                             <CorporateLoan
                                                                 selectedTask={selectedTask}
                                                                 onReturnToTaskSelect={() => setSelectedWorkType("TASK_SELECT")}
@@ -1209,7 +1106,7 @@ const BankerWorkSpace = () => {
                                                         )}
 
                                                         {/*법인계좌개설*/}
-                                                        {selectedWorkType === "CORPORATE-ACCOUNT" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CORPORATE-ACCOUNT" && (
                                                             <CorporateAccount
                                                                 selectedTask={selectedTask}
                                                                 onComplete={() => {
@@ -1220,7 +1117,7 @@ const BankerWorkSpace = () => {
                                                             />
                                                         )}
                                                         {/*법인카드*/}
-                                                        {selectedWorkType === "CORPORATE-CARD" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CORPORATE-CARD" && (
                                                             <CorporateCard
                                                                 selectedTask={selectedTask}
                                                                 onReturnToTaskSelect={() => setSelectedWorkType("TASK_SELECT")}
@@ -1232,7 +1129,7 @@ const BankerWorkSpace = () => {
                                                             />
                                                         )}
                                                         {/*부도관리*/}
-                                                        {selectedWorkType === "BANKRUPT-MANAGEMENT" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "BANKRUPT-MANAGEMENT" && (
                                                             <CorporateBankrupt
                                                                 selectedTask={selectedTask}
                                                                 onReturnToTaskSelect={() => setSelectedWorkType("TASK_SELECT")}
@@ -1244,7 +1141,7 @@ const BankerWorkSpace = () => {
                                                             />
                                                         )}
                                                         {/*연체관리*/}
-                                                        {selectedWorkType === "CORPORATE-ARREARS" && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && selectedWorkType === "CORPORATE-ARREARS" && (
                                                             <CorporateArrears
                                                                 selectedTask={selectedTask}
                                                                 onReturnToTaskSelect={() => setSelectedWorkType("TASK_SELECT")}
@@ -1255,7 +1152,7 @@ const BankerWorkSpace = () => {
                                                             />
                                                         )}
 
-                                                        {selectedTask.status !== 'WAITING' && (
+                                                        {selectedTask.status === 'IN_PROGRESS' && (
                                                             <>
                                                                 <div className={styles.backCard}>
                                                                     <button
@@ -1307,12 +1204,12 @@ const BankerWorkSpace = () => {
                                                         재시도
                                                     </button>
                                                 </div>
-                                            ) : logList.length === 0 ? (
+                                            ) : customerNotes.length === 0 ? (
                                                 <div className={styles.none}>
-                                                    업무 이력이 없습니다.
+                                                    등록된 고객 특이사항이 없습니다.
                                                 </div>
                                             ) : (
-                                                logList.map((log, index) => {
+                                                customerNotes.map((log, index) => {
                                                     return (
                                                         <div key={log.logId || index} className={styles.logItem}>
                                                                  <span className={styles.logDate}>
@@ -1340,7 +1237,6 @@ const BankerWorkSpace = () => {
                                             ) : (
                                                 <>
                                                     <div className={styles.aiPredictionRow}>
-                                                        <span>현재 데이터로 재분석</span>
                                                         <strong>{aiInsight.predictedTaskDetailType}</strong>
                                                     </div>
                                                     <div className={styles.aiReasonList}>
@@ -1467,7 +1363,6 @@ const BankerWorkSpace = () => {
             {isTossModalOpen && (
                 <TossModal
                     task={taskToToss}
-                    mode={outcomeMode}
                     onSuccess={handleOutcomeSuccess}
                     onClose={() => {
                         setIsTossModalOpen(false);

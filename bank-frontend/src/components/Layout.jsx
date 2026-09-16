@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 const Layout = ({ children }) => {
     const location = useLocation();
     const path = location.pathname.toLowerCase();
-    const isSpecialPage = path === '/adminlogin' || path === '/adminmain' || path === '/kiosk' || path === '/bankerworkspace';
+    const isSpecialPage = path === '/adminlogin' || path === '/adminmain' || path === '/kiosk' || path === '/bankerworkspace' || path === '/queue-display';
 
     if (isSpecialPage) {
         return (

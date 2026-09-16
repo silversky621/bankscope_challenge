@@ -9,6 +9,7 @@ import PrivateRoute from './components/PrivateRoute.jsx';
 import AdminLogin from './pages/Admin/AdminLogin.jsx';
 import AdminMain from './pages/Admin/AdminMain.jsx';
 import Kiosk from './pages/Kiosk/Kiosk.jsx';
+import QueueDisplay from './pages/Kiosk/QueueDisplay.jsx';
 import BankerWorkSpace from './pages/Banker/BankerWorkSpace.jsx';
 import ModalTestPage from './components/common/ModalTestPage.jsx';
 import LoadingTestPage from './components/common/LoadingTestPage.jsx';
@@ -32,6 +33,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
 
         <Route path="/kiosk" element={<Kiosk/>} />
+        <Route path="/queue-display" element={<QueueDisplay />} />
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

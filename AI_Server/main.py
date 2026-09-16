@@ -407,9 +407,9 @@ def auto_insert_task(req: AutoTaskRequest):
 
     try:
         with get_db_cursor() as (conn, cursor):
-            # 1. 중복 접수 방지 (WAITING 또는 IN_PROGRESS task가 이미 있으면 즉시 거절)
+            # 1. 대기·호출·상담 중에는 중복 접수를 막는다.
             cursor.execute(
-                "SELECT task_id FROM task WHERE user_id = %s AND status IN ('WAITING', 'IN_PROGRESS') LIMIT 1",
+                "SELECT task_id FROM task WHERE user_id = %s AND status IN ('WAITING', 'CALLED', 'IN_PROGRESS') LIMIT 1",
                 (req.user_id,)
             )
             if cursor.fetchone():
@@ -430,25 +430,15 @@ def auto_insert_task(req: AutoTaskRequest):
                 'task_type': '빠른 업무', 'prefix': 'A', 'processing_time': 5
             })
             task_type       = meta['task_type']
-            processing_time = meta['processing_time']
-            prefix          = meta['prefix']
             min_level       = get_min_level_by_detail_type(task_detail_type)
             assigned_level  = f"LEVEL_{min_level}"
 
-            # 4. 티켓 번호 생성 (오늘치 기준 + FOR UPDATE 행 잠금 → 동시 요청 간 번호 중복 방지)
-            #    Spring 경로(selectLastTicketNumber)와 동일하게 '오늘 날짜 + prefix'로 통일한다.
-            cursor.execute(
-                "SELECT ticket_number FROM task "
-                "WHERE ticket_number LIKE %s AND DATE(created_at) = CURDATE() "
-                "ORDER BY ticket_number DESC LIMIT 1 FOR UPDATE",
-                (f"{prefix}-%",)
-            )
-            last_ticket = cursor.fetchone()
-            next_num = int(str(last_ticket['ticket_number']).split("-")[1]) + 1 if last_ticket else 1
-            ticket_number = f"{prefix}-{next_num:03d}"
+            # 4. 직접 접수와 공유하는 일별 숫자 번호. 발급과 접수를 함께 커밋한다.
+            from ticket_numbers import allocate_ticket_number
+            ticket_number, now = allocate_ticket_number(cursor)
 
             # 5. 창구 직원 배정 + 예상 대기 시간 계산 (한 번에)
-            # 전체 WAITING 처리 시간 합산 기준으로 가장 한가한 직원 선택
+            # 아직 상담을 시작하지 않은 WAITING·CALLED의 처리 시간 합산 기준으로 직원 선택
             # 그 최솟값이 곧 이 고객의 예상 대기 시간
             member_id = None
             counter_number = None
@@ -465,7 +455,7 @@ def auto_insert_task(req: AutoTaskRequest):
                                WHEN '기업 • 특수' THEN 25
                                ELSE 5
                            END) AS total_wait_min
-                    FROM task WHERE status = 'WAITING'
+                    FROM task WHERE status IN ('WAITING', 'CALLED')
                     GROUP BY member_id
                 ) w ON m.id = w.member_id
                 WHERE m.level >= %s AND m.status = 1
@@ -488,10 +478,14 @@ def auto_insert_task(req: AutoTaskRequest):
             # 6. ranking 계산 — 배정된 직원의 전체 WAITING 건수 기준
             if member_id:
                 cursor.execute(
-                    "SELECT COUNT(*) AS cnt FROM task WHERE member_id = %s AND status = 'WAITING'",
+                    "SELECT COUNT(CASE WHEN status = 'WAITING' THEN 1 END) AS cnt, "
+                    "COALESCE(SUM(CASE task_type WHEN '빠른 업무' THEN 5 WHEN '상담 업무' THEN 10 ELSE 25 END), 0) AS minutes "
+                    "FROM task WHERE member_id = %s AND status IN ('WAITING', 'CALLED', 'IN_PROGRESS')",
                     (member_id,)
                 )
-                ranking = int(cursor.fetchone()['cnt']) + 1
+                queue = cursor.fetchone()
+                ranking = int(queue['cnt']) + 1
+                expected_waiting_time = int(queue['minutes'])
             else:
                 ranking = 1
 
@@ -503,7 +497,6 @@ def auto_insert_task(req: AutoTaskRequest):
                     predicted_task_detail_type, feature_snapshot, feature_snapshot_at
                 ) VALUES (%s, %s, %s, %s, %s, %s, 'WAITING', %s, %s, %s, %s, 1, %s, %s, %s)
             """
-            now = datetime.now()
             cursor.execute(insert_query, (
                 req.user_id, ticket_number, task_type, task_detail_type, assigned_level,
                 expected_waiting_time, member_id, ranking, now, now, task_detail_type,

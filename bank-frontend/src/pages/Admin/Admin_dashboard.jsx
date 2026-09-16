@@ -290,7 +290,7 @@ export default function Admin_dashboard() {
                               {isDelayed ? `지연 (+${formatTime(delayOverageSeconds)})` : "업무중"}
                             </span>
                           ) : (
-                            <span className={styles.tStatusBadge} style={{ background: "#f1f5f9", color: "#64748b" }}>대기중</span>
+                            <span className={styles.tStatusBadge} style={{ background: "#f1f5f9", color: "#64748b" }}>{t.status === '호출중' ? '호출중' : '대기중'}</span>
                           )}
                           <span className={styles.tStatsInfo}>| 처리 {t.processed || 0}건 · 대기 {queue.filter(q => q.assignedTo === t.id).length}명</span>
                         </div>

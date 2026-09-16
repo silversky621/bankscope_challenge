@@ -4,6 +4,50 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bankscope.backend.mappers.TaskMapper">
 
+    <!-- Same ordering for staff lists, customer positions, and transfer estimates. -->
+    <sql id="queueAheadPredicate">
+        ahead.member_id = ${memberId} AND ahead.task_id != ${taskId}
+        AND (ahead.status IN ('CALLED', 'IN_PROGRESS') OR (ahead.status = 'WAITING' AND (
+            (ahead.priority_transferred_at IS NOT NULL AND (
+                ${priorityAt} IS NULL OR ahead.priority_transferred_at &lt; ${priorityAt}
+                OR (ahead.priority_transferred_at = ${priorityAt} AND ahead.task_id &lt; ${taskId})))
+            OR (ahead.priority_transferred_at IS NULL AND ${priorityAt} IS NULL AND (
+                ahead.created_at &lt; ${createdAt}
+                OR (ahead.created_at = ${createdAt} AND ahead.task_id &lt; ${taskId})))
+        )))
+    </sql>
+
+    <sql id="liveQueuePosition">
+        CASE WHEN t1.status = 'WAITING' AND t1.member_id IS NOT NULL THEN (
+            SELECT COALESCE(SUM(CASE ahead.task_type WHEN '빠른 업무' THEN 5 WHEN '상담 업무' THEN 10 ELSE 25 END), 0)
+            FROM bank.task ahead WHERE <include refid="queueAheadPredicate">
+                <property name="memberId" value="t1.member_id"/>
+                <property name="taskId" value="t1.task_id"/>
+                <property name="priorityAt" value="t1.priority_transferred_at"/>
+                <property name="createdAt" value="t1.created_at"/>
+            </include>
+        ) ELSE t1.expected_waiting_time END AS expectedWaitingTime,
+        CASE WHEN t1.status = 'WAITING' AND t1.member_id IS NOT NULL THEN (
+            SELECT COUNT(*) + 1 FROM bank.task ahead WHERE ahead.status = 'WAITING'
+            AND <include refid="queueAheadPredicate">
+                <property name="memberId" value="t1.member_id"/>
+                <property name="taskId" value="t1.task_id"/>
+                <property name="priorityAt" value="t1.priority_transferred_at"/>
+                <property name="createdAt" value="t1.created_at"/>
+            </include>
+        ) ELSE t1.ranking END AS ranking
+    </sql>
+
+    <sql id="staffQueueOrder">
+        CASE WHEN t1.status IN ('CALLED', 'IN_PROGRESS') THEN 0
+             WHEN t1.status = 'WAITING' AND t1.priority_transferred_at IS NOT NULL THEN 1
+             WHEN t1.status = 'WAITING' THEN 2 ELSE 3 END,
+        CASE WHEN t1.status = 'WAITING' AND t1.priority_transferred_at IS NOT NULL
+             THEN t1.priority_transferred_at ELSE t1.created_at END,
+        t1.task_id
+    </sql>
+
+
     <insert id="insert" useGeneratedKeys="true" keyColumn="task_id" keyProperty="taskId" >
         INSERT INTO `bank`.`task`( user_id, ticket_number, task_type, task_detail_type, assigned_level, expected_waiting_time, status, member_id, ranking, created_at, updated_at,is_ai)
         VALUES (
@@ -26,15 +70,22 @@
         SET status = #{status},
             updated_at = NOW()
         WHERE task_id = #{taskId}
-          AND (#{status} != 'IN_PROGRESS' OR status = 'WAITING')
+          AND (#{status} != 'IN_PROGRESS' OR status = 'CALLED')
     </update>
 
-    <select id="selectLastTicketNumber" resultType="string">
-        SELECT ticket_number FROM `bank`.`task`
-        WHERE ticket_number LIKE CONCAT(#{prefix}, '%')
-        AND DATE(created_at) = CURDATE()
-        ORDER BY ticket_number DESC LIMIT 1
-        FOR UPDATE
+    <select id="selectTicketIssueTime" resultType="java.time.LocalDateTime" useCache="false">
+        SELECT NOW()
+    </select>
+
+    <insert id="incrementDailyTicketNumber">
+        INSERT INTO `bank`.`task_ticket_sequence` (ticket_date, last_number)
+        VALUES (#{ticketDate}, 1)
+        ON DUPLICATE KEY UPDATE last_number = last_number + 1
+    </insert>
+
+    <select id="selectDailyTicketNumber" resultType="long" useCache="false">
+        SELECT last_number FROM `bank`.`task_ticket_sequence`
+        WHERE ticket_date = #{ticketDate}
     </select>
 
     <select id="countWaitingTasks" resultType="int">
@@ -52,7 +103,7 @@
                        WHEN '기업 • 특수' THEN 25
                        ELSE 5
                    END) AS total_wait_min
-            FROM `bank`.`task` WHERE status = 'WAITING'
+            FROM `bank`.`task` WHERE status IN ('WAITING', 'CALLED')
             GROUP BY member_id
         ) w ON m.id = w.member_id
         WHERE m.level >= #{minLevel} AND m.status = 1
@@ -68,7 +119,7 @@
             ELSE 5
         END), 0)
         FROM `bank`.`task`
-        WHERE member_id = #{memberId} AND status = 'WAITING'
+        WHERE member_id = #{memberId} AND status IN ('WAITING', 'CALLED', 'IN_PROGRESS')
     </select>
 
     <select id="countWaitingTasksByMemberId" resultType="int">
@@ -85,11 +136,12 @@
                `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
                `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
                `t1`.`transfer_count` AS `transferCount`,
+               (t1.priority_transferred_at IS NOT NULL) AS priorityTransfer,
                `t1`.`assigned_level` AS `assignedLevel`,
-               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               <include refid="liveQueuePosition"/>,
                `t1`.`status` AS `status`,
                `t1`.`member_id` AS `memberId`,
-               `t1`.`ranking` AS `ranking`,
+
                `t1`.`created_at` AS `createdAt`,
                `t1`.`updated_at` AS `updatedAt`,
                 `t2`.`name` AS `name`,
@@ -109,11 +161,12 @@
                `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
                `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
                `t1`.`transfer_count` AS `transferCount`,
+               (t1.priority_transferred_at IS NOT NULL) AS priorityTransfer,
                `t1`.`assigned_level` AS `assignedLevel`,
-               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               <include refid="liveQueuePosition"/>,
                `t1`.`status` AS `status`,
                `t1`.`member_id` AS `memberId`,
-               `t1`.`ranking` AS `ranking`,
+
                `t1`.`created_at` AS `createdAt`,
                `t1`.`updated_at` AS `updatedAt`,
                 `t2`.`name` AS `name`,
@@ -122,14 +175,14 @@
             FROM `bank`.`task` AS `t1`
             LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
             WHERE `t1`.`user_id` = #{userId}
-            ORDER BY `createdAt` DESC
+            ORDER BY `createdAt` DESC, `t1`.`task_id` DESC
             LIMIT 1
     </select>
 
     <select id="selectAverageTime" resultType="java.lang.String">
-        SELECT IFNULL(AVG(expected_waiting_time), 0)
-        FROM `bank`.`task`
-        WHERE status = 'WAITING'
+        SELECT IFNULL(AVG(q.expectedWaitingTime), 0)
+        FROM (SELECT <include refid="liveQueuePosition"/>
+              FROM bank.task t1 WHERE t1.status = 'WAITING') q
     </select>
 
     <select id="countAvailableMembers" resultType="int">
@@ -184,11 +237,12 @@
                `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
                `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
                `t1`.`transfer_count` AS `transferCount`,
+               (t1.priority_transferred_at IS NOT NULL) AS priorityTransfer,
                `t1`.`assigned_level`       AS `assignedLevel`,
-               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               <include refid="liveQueuePosition"/>,
                `t1`.`status`              AS `status`,
                `t1`.`member_id`           AS `memberId`,
-               `t1`.`ranking`             AS `ranking`,
+
                `t1`.`created_at`          AS `createdAt`,
                `t1`.`updated_at`          AS `updatedAt`,
                `t2`.`name`                AS `name`,
@@ -232,7 +286,7 @@
             )
             OR (`t1`.`status` != 'WAITING' AND `t1`.`member_id` = #{memberId})
         )
-        ORDER BY `t1`.`created_at`
+        ORDER BY <include refid="staffQueueOrder"/>
     </select>
 
     <select id="selectTasksByMemberId" resultType="com.bankscope.backend.vos.TaskVo">
@@ -244,11 +298,12 @@
                `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
                `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
                `t1`.`transfer_count` AS `transferCount`,
+               (t1.priority_transferred_at IS NOT NULL) AS priorityTransfer,
                `t1`.`assigned_level` AS `assignedLevel`,
-               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               <include refid="liveQueuePosition"/>,
                `t1`.`status` AS `status`,
                `t1`.`member_id` AS `memberId`,
-               `t1`.`ranking` AS `ranking`,
+
                `t1`.`created_at` AS `createdAt`,
                `t1`.`updated_at` AS `updatedAt`,
                `t2`.`name` AS `name`,
@@ -262,7 +317,7 @@
                  LEFT JOIN `bank`.`member` AS `t2` ON `t1`.`member_id` = `t2`.`id`
                  LEFT JOIN `bank`.`user` AS `t3` ON `t1`.`user_id` = `t3`.`id`
         WHERE `t1`.`member_id` = #{memberId}
-        ORDER BY `createdAt`
+        ORDER BY <include refid="staffQueueOrder"/>
     </select>
 
     <select id="selectWaitingTasksByMemberId" resultType="com.bankscope.backend.entities.TaskEntity">
@@ -276,7 +331,7 @@
         SELECT m.id FROM `bank`.`member` m
         LEFT JOIN (
             SELECT member_id, COUNT(*) AS waiting_cnt
-            FROM `bank`.`task` WHERE status = 'WAITING'
+            FROM `bank`.`task` WHERE status IN ('WAITING', 'CALLED')
             GROUP BY member_id
         ) w ON m.id = w.member_id
         WHERE m.level >= #{minLevel}
@@ -302,13 +357,12 @@
             task_type AS taskType,
             task_detail_type AS taskDetailType,
             assigned_level AS assignedLevel,
-            expected_waiting_time AS expectedWaitingTime,
+            <include refid="liveQueuePosition"/>,
             status AS status,
             member_id AS memberId,
-            ranking AS ranking,
             created_at AS createdAt,
             updated_at AS updatedAt
-        FROM `bank`.`task`
+        FROM `bank`.`task` t1
         WHERE user_id = #{userId} AND status = 'WAITING'
     </select>
 
@@ -329,13 +383,54 @@
                created_at AS createdAt, updated_at AS updatedAt, is_ai AS isAi,
                predicted_task_detail_type AS predictedTaskDetailType,
                confirmed_task_detail_type AS confirmedTaskDetailType, confirmed_by AS confirmedBy,
-               confirmed_at AS confirmedAt
+               confirmed_at AS confirmedAt, priority_transferred_at AS priorityTransferredAt
         FROM `bank`.`task` WHERE task_id = #{taskId} FOR UPDATE
     </select>
 
     <select id="selectMemberForUpdate" resultType="com.bankscope.backend.entities.MemberEntity">
         SELECT id, name, level, status, counter_number AS counterNumber
         FROM `bank`.`member` WHERE id = #{memberId} FOR UPDATE
+    </select>
+
+    <select id="selectOtherActiveTaskForUpdate" resultType="long">
+        SELECT task_id FROM bank.task
+        WHERE member_id = #{memberId} AND task_id != #{taskId} AND status IN ('CALLED', 'IN_PROGRESS')
+        ORDER BY task_id LIMIT 1 FOR UPDATE
+    </select>
+
+    <update id="markMemberOffDuty">
+        UPDATE bank.member SET status = 0 WHERE id = #{memberId}
+    </update>
+
+    <!-- Keep five physical counter positions even when idle or off duty.
+         Call IDs distinguish recalls; names and purpose never leave this public query. -->
+    <select id="selectQueueDisplay" resultType="map" useCache="false">
+        WITH counters AS (
+            SELECT 1 AS counterNumber UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5
+        ), working AS (
+            SELECT DISTINCT counter_number FROM bank.member WHERE status = 1 AND counter_number BETWEEN 1 AND 5
+        ), calls AS (
+            SELECT task_id, member_id, MAX(log_id) AS callId
+            FROM bank.task_processing_log
+            WHERE action_type IN ('CALL', 'RECALL') AND created_at >= CURDATE()
+            GROUP BY task_id, member_id
+        ), active AS (
+            SELECT m.counter_number, t.ticket_number, t.status, calls.callId,
+                   ROW_NUMBER() OVER (PARTITION BY m.counter_number
+                       ORDER BY COALESCE(calls.callId, 0) DESC, t.updated_at DESC, t.task_id DESC) AS position
+            FROM bank.member m
+            JOIN bank.task t ON t.member_id = m.id AND t.status IN ('CALLED', 'IN_PROGRESS')
+            LEFT JOIN calls ON calls.task_id = t.task_id AND calls.member_id = m.id
+            WHERE m.status = 1 AND m.counter_number BETWEEN 1 AND 5
+        )
+        SELECT c.counterNumber,
+               COALESCE(active.ticket_number, '') AS ticketNumber,
+               COALESCE(active.status, CASE WHEN working.counter_number IS NULL THEN 'OFFLINE' ELSE 'WAITING' END) AS status,
+               COALESCE(active.callId, 0) AS callId
+        FROM counters c
+        LEFT JOIN working ON working.counter_number = c.counterNumber
+        LEFT JOIN active ON active.counter_number = c.counterNumber AND active.position = 1
+        ORDER BY c.counterNumber
     </select>
 
     <select id="selectTransferCandidates" resultType="map">
@@ -349,12 +444,14 @@
     </select>
 
     <select id="selectQueueBeforeTask" resultType="map">
-        SELECT COUNT(CASE WHEN status = 'WAITING' THEN 1 END) AS waitingCount,
-               COALESCE(SUM(CASE task_type WHEN '빠른 업무' THEN 5 WHEN '상담 업무' THEN 10 ELSE 25 END), 0) AS waitingMinutes
-        FROM `bank`.`task`
-        WHERE member_id = #{task.memberId} AND task_id != #{task.taskId}
-          AND (status = 'IN_PROGRESS' OR (status = 'WAITING' AND
-              (created_at &lt; #{task.createdAt} OR (created_at = #{task.createdAt} AND task_id &lt; #{task.taskId}))))
+        SELECT COUNT(CASE WHEN ahead.status = 'WAITING' THEN 1 END) AS waitingCount,
+               COALESCE(SUM(CASE ahead.task_type WHEN '빠른 업무' THEN 5 WHEN '상담 업무' THEN 10 ELSE 25 END), 0) AS waitingMinutes
+        FROM bank.task ahead WHERE <include refid="queueAheadPredicate">
+            <property name="memberId" value="#{task.memberId}"/>
+            <property name="taskId" value="#{task.taskId}"/>
+            <property name="priorityAt" value="#{task.priorityTransferredAt}"/>
+            <property name="createdAt" value="#{task.createdAt}"/>
+        </include>
     </select>
 
     <sql id="outcomeAssignments">
@@ -373,6 +470,7 @@
     <update id="transferTask">
         UPDATE `bank`.`task` SET <include refid="outcomeAssignments"/>,
             member_id = #{task.memberId}, ranking = #{task.ranking},
+            priority_transferred_at = #{task.priorityTransferredAt},
             expected_waiting_time = #{task.expectedWaitingTime},
             transfer_count = transfer_count + 1, last_transferred_at = NOW()
         WHERE task_id = #{task.taskId}
@@ -403,11 +501,12 @@
                `t1`.`predicted_task_detail_type` AS `predictedTaskDetailType`,
                `t1`.`confirmed_task_detail_type` AS `confirmedTaskDetailType`,
                `t1`.`transfer_count` AS `transferCount`,
+               (t1.priority_transferred_at IS NOT NULL) AS priorityTransfer,
                `t1`.`assigned_level` AS `assignedLevel`,
-               `t1`.`expected_waiting_time` AS `expectedWaitingTime`,
+               <include refid="liveQueuePosition"/>,
                `t1`.`status` AS `status`,
                `t1`.`member_id` AS `memberId`,
-               `t1`.`ranking` AS `ranking`,
+
                `t1`.`created_at` AS `createdAt`,
                `t1`.`updated_at` AS `updatedAt`,
                `t2`.`name` AS `name`,
@@ -442,11 +541,11 @@
         m.level AS memberLevel,
 
         -- 1. 업무 상태 로직 (IN_PROGRESS인 태스크가 있으면 '업무중', 없으면 '대기중')
-        IF(t.task_id IS NULL, '대기중', '업무중') AS currentTaskStatus,
+        CASE WHEN t.status = 'CALLED' THEN '호출중' WHEN t.task_id IS NULL THEN '대기중' ELSE '업무중' END AS currentTaskStatus,
 
         -- 2. 업무 수락 시점 고정 (IN_PROGRESS 상태일 때의 updated_at을 사용)
         -- 업무 종료(status 변경) 시 t.task_id가 NULL이 되어 시간도 자연스럽게 사라짐
-        t.updated_at AS taskStartedAt,
+        CASE WHEN t.status = 'IN_PROGRESS' THEN t.updated_at END AS taskStartedAt,
         t.expected_waiting_time AS `expectedWaitingTime`,
         -- 3. 나머지 필요한 데이터들
         m.level AS memberRank, -- 필요시 CASE 문으로 '사원', '대리' 변환 가능
@@ -457,7 +556,7 @@
         t.task_type AS taskType
         FROM `bank`.`member` m
         -- 핵심: 현재 해당 직원이 '진행 중'인 업무만 조인
-        LEFT JOIN `bank`.`task` t ON m.id = t.member_id AND t.status = 'IN_PROGRESS'
+        LEFT JOIN `bank`.`task` t ON m.id = t.member_id AND t.status IN ('CALLED', 'IN_PROGRESS')
         WHERE m.status = 1 -- 출근한 직원만 조회
         ORDER BY m.level DESC, m.name ASC
     </select>

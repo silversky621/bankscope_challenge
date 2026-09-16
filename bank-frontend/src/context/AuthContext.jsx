@@ -70,7 +70,12 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await fetch('/api/user/logout', { method: 'POST' });
+            const response = await fetch('/api/user/logout', { method: 'POST' });
+            if (response.status === 409) {
+                showAlert('호출 중이거나 상담 중인 고객을 먼저 처리해주세요.');
+                return false;
+            }
+            if (!response.ok) throw new Error('Logout failed');
             
             // 로그아웃 시 로컬스토리지에 저장된 유저의 bankerStatus 캐시 제거
             if (user && user.email) {
@@ -80,9 +85,11 @@ export const AuthProvider = ({ children }) => {
             showAlert('로그아웃 되었습니다.', () => {
                 setUser(null);
             });
+            return true;
         } catch (error) {
             console.error("Logout failed", error);
             showAlert('로그아웃에 실패했습니다.');
+            return false;
         }
     };
 

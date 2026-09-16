@@ -17,6 +17,20 @@ from task_schema import FEATURE_COLUMNS, TASK_LEVELS, validate_task_frame
 
 ROOT = Path(__file__).resolve().parent
 
+# A transfer confirms the requested purpose, not the work ultimately performed.
+# New one-click closures use CLOSE. Only legacy explicit completion confirmations qualify.
+CONFIRMED_TASK_QUERY = """
+    SELECT task_id, user_id, feature_snapshot, confirmed_task_detail_type
+    FROM task WHERE status = 'COMPLETED' AND confirmed_at IS NOT NULL AND confirmed_by IS NOT NULL
+      AND feature_snapshot IS NOT NULL AND feature_snapshot_at <= created_at
+      AND confirmed_at >= feature_snapshot_at AND ticket_number NOT LIKE 'DCG%'
+      AND EXISTS (
+          SELECT 1 FROM task_processing_log log
+          WHERE log.task_id = task.task_id AND log.action_type = 'COMPLETE'
+            AND log.processing_note = CONCAT('실제 처리 업무 확인: ', task.confirmed_task_detail_type)
+      )
+"""
+
 
 def load_confirmed_db_data():
     import os
@@ -27,12 +41,7 @@ def load_confirmed_db_data():
                                         password=os.getenv('DB_PASSWORD', ''), database=os.getenv('DB_NAME', 'bank'))
     cursor = connection.cursor(dictionary=True)
     try:
-        cursor.execute("""
-            SELECT task_id, user_id, feature_snapshot, confirmed_task_detail_type
-            FROM task WHERE status = 'COMPLETED' AND confirmed_at IS NOT NULL AND confirmed_by IS NOT NULL
-              AND feature_snapshot IS NOT NULL AND feature_snapshot_at <= created_at
-              AND confirmed_at >= feature_snapshot_at AND ticket_number NOT LIKE 'DCG%'
-        """)
+        cursor.execute(CONFIRMED_TASK_QUERY)
         records = []
         for row in cursor.fetchall():
             snapshot = json.loads(row['feature_snapshot'])

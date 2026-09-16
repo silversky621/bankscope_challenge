@@ -99,7 +99,7 @@ public class TaskController {
         return taskService.getHourlyCongestionStats();
     }
 
-    @Operation(summary = "창구 토스", description = "내가 처리할수 없는 업무 창구 토스하기 , task의 memberId와 WAITING 이나 IN_PROGRESS 상태인 업무를 WAITING으로 전환" )
+    @Operation(summary = "창구 토스", description = "상담 시작 후 확인한 방문 목적과 사유를 전달하고 받는 창구의 우선 대기로 이관합니다." )
     @RequestMapping(value = "/toss", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> tossTask(HttpSession session, @RequestBody TaskTransferRequest request) {

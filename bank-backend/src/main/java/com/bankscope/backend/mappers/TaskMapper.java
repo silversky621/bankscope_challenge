@@ -16,7 +16,9 @@ import java.util.Map;
 @Mapper
 public interface TaskMapper {
     int insert(@Param(value = "task")TaskEntity task);
-    String selectLastTicketNumber(@Param("prefix") String prefix);
+    java.time.LocalDateTime selectTicketIssueTime();
+    int incrementDailyTicketNumber(@Param("ticketDate") java.time.LocalDate ticketDate);
+    Long selectDailyTicketNumber(@Param("ticketDate") java.time.LocalDate ticketDate);
     int countWaitingTasks(@Param("taskType") String taskType);
     Integer selectAvailableMemberId(@Param("minLevel") int minLevel);
     List<TaskVo> selectTasksByUserId(@Param("userId") Integer userId);
@@ -39,6 +41,9 @@ public interface TaskMapper {
     int countWaitingTasksByMemberId(@Param("memberId") Integer memberId);
     TaskEntity selectTaskForUpdate(@Param("taskId") Long taskId);
     MemberEntity selectMemberForUpdate(@Param("memberId") Integer memberId);
+    Long selectOtherActiveTaskForUpdate(@Param("memberId") Integer memberId, @Param("taskId") Long taskId);
+    int markMemberOffDuty(@Param("memberId") Integer memberId);
+    List<Map<String, Object>> selectQueueDisplay();
     List<Map<String, Object>> selectTransferCandidates(@Param("minLevel") int minLevel, @Param("excludeId") Integer excludeId);
     Map<String, Object> selectQueueBeforeTask(@Param("task") TaskEntity task);
     int updateTaskOutcome(@Param("task") TaskEntity task);

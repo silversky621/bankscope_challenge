@@ -266,7 +266,6 @@ public class UserController {
         MemberEntity member = SessionAuth.member(session);
         if (member != null) {
             this.taskService.reassignTasksOnMemberLogout(member.getId());
-            this.userService.setMemberStatus(member.getEmail(), 0);
         }
         redisTemplate.delete("bankscope:chat:" + session.getId());
         session.invalidate();

@@ -1,0 +1,36 @@
+.display {
+    min-height: 100dvh;
+    box-sizing: border-box;
+    background: #f0f5fc;
+    color: #162d50;
+    padding: clamp(20px, 3vw, 56px);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+.header { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; font-size: clamp(20px, 2vw, 32px); }
+.header strong { color: #174caf; }
+.header button { margin-left: auto; padding: 12px 20px; border: 1px solid #526989; border-radius: 12px; background: white; color: #263f64; font-size: 16px; cursor: pointer; }
+.header button:disabled { border-color: transparent; background: transparent; cursor: default; }
+.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(12px, 1.5vw, 28px); flex: 1; }
+.card { position: relative; min-width: 0; min-height: 380px; display: flex; flex-direction: column; align-items: center; text-align: center; background: white; border: 3px solid #d4dfef; border-radius: 24px; }
+.counterTitle { align-self: stretch; margin: 0; padding: 22px 12px; border-bottom: 1px solid #d4dfef; font-size: clamp(30px, 2.7vw, 48px); }
+.counterTitle span { font-size: 0.65em; margin-left: 5px; }
+.ticket { flex: 1; width: 100%; box-sizing: border-box; padding: 32px 12px; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.ticketLabel { font-size: clamp(18px, 1.5vw, 24px); color: #48607f; }
+.ticket strong { font-size: clamp(38px, 4.4vw, 84px); line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ticket small { font-size: 24px; margin-left: 4px; }
+.status { border-radius: 999px; padding: 10px 20px; font-size: clamp(20px, 1.6vw, 28px); font-weight: 700; color: #48607f; background: #edf2f8; }
+.card p { font-size: clamp(17px, 1.25vw, 23px); padding: 0 16px; margin: 20px 0 28px; line-height: 1.7; word-break: keep-all; }
+.calling { border-color: #2259bd; background: #f8fbff; }
+.calling .counterTitle, .calling .ticket strong { color: #174caf; }
+.calling .status { color: white; background: #174caf; }
+.offline { background: #e8edf4; border-color: #d6dfe9; color: #52647a; }
+.callHighlight { position: absolute; inset: -3px; border-radius: 24px; pointer-events: none; animation: callAttention 4s ease-out both; }
+@keyframes callAttention { from { box-shadow: 0 0 0 7px #3879dd, 0 10px 32px #174caf44; } to { box-shadow: 0 0 0 0 transparent, 0 0 0 transparent; } }
+.footer { text-align: center; font-size: clamp(18px, 1.5vw, 24px); line-height: 1.7; }
+.notice { text-align: center; color: #9c2e25; }
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .card { min-height: 280px; } .ticket { padding-block: 24px; } }
+@media (max-width: 700px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .header { gap: 12px; } .header button { margin-left: 0; } }
+@media (max-width: 440px) { .grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .callHighlight { animation: none; } }

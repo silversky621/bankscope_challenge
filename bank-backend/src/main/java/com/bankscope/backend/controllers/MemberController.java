@@ -40,18 +40,17 @@ public class MemberController {
         return this.taskService.getTasksByMemberId(member.getId().intValue());
     }
 
-    @Operation(summary = "업무 상태 변경", description = "특정 업무의 상태를 변경합니다. (WAITING -> IN_PROGRESS -> COMPLETED)")
+    @Operation(summary = "업무 상태 변경", description = "대기 → 호출 → 상담 시작 → 종료. 미방문은 호출 후에만 처리하며, 종료만으로 실제 업무를 확정하지 않습니다.")
     @RequestMapping(value = "/task/{taskId}/status", method = RequestMethod.PATCH, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> updateTaskStatus(@PathVariable Long taskId, @RequestParam String status,
-                                               @RequestParam(required = false) String actualTaskDetailType,
                                                HttpSession session) {
         Map<String, Object> response = new HashMap<>();
         if (session.getAttribute("member") == null) {
             response.put("result", TaskResult.FAILURE_SESSION.name());
             return response;
         }
-        TaskResult result = this.taskService.updateTaskStatus(SessionAuth.member(session), taskId, status, actualTaskDetailType);
+        TaskResult result = this.taskService.updateTaskStatus(SessionAuth.member(session), taskId, status);
         response.put("result", result.name());
         return response;
     }
@@ -164,6 +163,10 @@ public class MemberController {
             response.put("result", CommonResult.FAILURE.name());
         }
         return response;
+    }
+    @PostMapping("/task/{taskId}/recall")
+    public Map<String, Object> recallTask(@PathVariable Long taskId, HttpSession session) {
+        return Map.of("result", taskService.recallTask((MemberEntity) session.getAttribute("member"), taskId).name());
     }
 
     @Operation(summary = "대시보드 상단 통계 api", description = "전체 대기인원과 오늘 처리 건수를 한 번에 반환합니다.")

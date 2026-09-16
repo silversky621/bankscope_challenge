@@ -7,12 +7,13 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
 
     const [ticketInfo, setTicketInfo] = useState({
         ticketNumber: '',
-        level: '',
         counter: '',
+        waitingAhead: null,
         taskType: '',
         taskDetailType: ''
     });
     const [isLoading, setIsLoading] = useState(true);
+    const [hasTicket, setHasTicket] = useState(false);
     const isSubmitted = useRef(false); // 중복 호출 방지용 ref
 
     useEffect(() => {
@@ -77,14 +78,17 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
                             // 창구번호는 접수 응답에 이미 포함됨 (AI: counter_number / 직접접수: counterNumber).
                             // 세션리스 키오스크가 권한 필요한 API(/api/user/members)를 2차 조회하지 않도록 응답값을 그대로 사용.
                             const counterNumber = task.counterNumber ?? task.counter_number ?? null;
+                            const ticketNumber = task.ticketNumber ?? task.ticket_number;
+                            if (!ticketNumber) throw new Error('발급된 접수번호를 확인하지 못했습니다.');
 
                             setTicketInfo({
-                                ticketNumber: task.ticketNumber || task.ticket_number || '-',
-                                level: task.assignedLevel || task.assigned_level || '-',
-                                counter: counterNumber ? `${counterNumber}번 창구` : '배정 중',
+                                ticketNumber,
+                                counter: counterNumber ? `${counterNumber}번 창구` : '',
+                                waitingAhead: counterNumber && task.ranking != null ? Math.max(0, Number(task.ranking) - 1) : null,
                                 taskType: task.taskType || task.task_type || '-',
                                 taskDetailType: task.taskDetailType || task.task_detail_type || '-'
                             });
+                            setHasTicket(true);
                             break;
                         }
                         case 'FAILURE_TASK_IN_PROGRESS':
@@ -138,15 +142,15 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
         submitFormData();
     }, [formData, onGoHome, isAiMode, openModal]);
 
-    // 7초 자동 이동 타이머 (버튼을 직접 누르지 않아도 넘어가게 유지)
+    // 접수 성공 후 자동으로 처음 화면으로 이동
     useEffect(() => {
-        if (!isLoading) {
+        if (!isLoading && hasTicket) {
             const timer = setTimeout(() => {
                 onGoHome();
             }, 4000);
             return () => clearTimeout(timer);
         }
-    }, [isLoading, onGoHome]);
+    }, [isLoading, hasTicket, onGoHome]);
 
 
     const getDisplayTitle = () => {
@@ -154,14 +158,7 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
             return isAiMode ? "AI 자동 접수 진행 중..." : `${formData.taskType} 접수 진행 중...`;
         }
         
-        // 데이터 로드 완료 후
-        if (isAiMode) {
-            // AI가 무슨 업무로 분류했는지 명확하게 표시
-            return `[AI 배정 완료]`;
-        } else {
-            // 직접 접수한 업무 표시
-            return `${formData.taskType} 선택 완료`;
-        }
+        return hasTicket ? '접수가 완료되었습니다' : '접수를 확인해주세요';
     };
 
     return (
@@ -185,14 +182,21 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
             <div className={styles.completeHeader}>
                 <h2 className={styles.completeTitle}>{getDisplayTitle()}</h2>
                 <p className={styles.completeSubtitle}>
-                    {isLoading ? '고객님의 정보를 서버로 전송하고 있습니다...' : '최적의 담당 창구를 배치 완료했습니다.'}
+                    {isLoading ? '고객님의 정보를 서버로 전송하고 있습니다...' : hasTicket ? '접수번호와 담당 창구를 확인해주세요.' : '안내에 따라 접수 상태를 확인해주세요.'}
                 </p>
             </div>
 
-            {!isLoading && (
+            {!isLoading && hasTicket && (
                 <>
                     <div className={styles.ticketCard}>
-                        <div className={styles.ticketNumber}>{ticketInfo.ticketNumber}</div>
+                        <p className={styles.ticketCaption}>접수번호</p>
+                        <div className={styles.ticketNumber}>{ticketInfo.ticketNumber}번</div>
+                        <p className={styles.ticketCounter}>{ticketInfo.counter
+                            ? `${ticketInfo.counter}에서 기다려 주세요.` : '담당 창구를 확인 중입니다.'}</p>
+                        {ticketInfo.waitingAhead !== null && <p className={styles.ticketWaiting}>
+                            내 앞에 기다리는 고객: <strong>{ticketInfo.waitingAhead}명</strong>
+                        </p>}
+                        <p className={styles.ticketNotice}>창구별로 호출 순서가 다를 수 있습니다.</p>
 
                         <div className={styles.ticketDetails}>
                             <div className={styles.ticketRow}>
@@ -204,16 +208,6 @@ const KioskComplete = ({ formData, onGoHome, /*onAddMore,*/ userName, isAiMode }
                                 <span className={styles.ticketLabel}>상세 업무</span>
                                 <div className={styles.ticketDashes}></div>
                                 <span className={styles.ticketValue}>{ticketInfo.taskDetailType}</span>
-                            </div>
-                            <div className={styles.ticketRow}>
-                                <span className={styles.ticketLabel}>배치 레벨</span>
-                                <div className={styles.ticketDashes}></div>
-                                <span className={styles.ticketValue}>{ticketInfo.level}</span>
-                            </div>
-                            <div className={styles.ticketRow}>
-                                <span className={styles.ticketLabel}>예상 창구</span>
-                                <div className={styles.ticketDashes}></div>
-                                <span className={styles.ticketValue}>{ticketInfo.counter}</span>
                             </div>
                         </div>
                     </div>

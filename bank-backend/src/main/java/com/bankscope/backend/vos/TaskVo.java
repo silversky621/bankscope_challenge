@@ -34,6 +34,7 @@ public class TaskVo {
     private String predictedTaskDetailType;
     private String confirmedTaskDetailType;
     private Integer transferCount;
+    private Boolean priorityTransfer;
     private Integer counterNumber;
 
 }

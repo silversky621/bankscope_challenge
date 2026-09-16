@@ -46,10 +46,14 @@ public class MemberService {
         return taskMapper.selectDashboardWaitingList();
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public CommonResult patchMemberStatus(MemberEntity member, Boolean status) {
-        if (member == null) {
+        if (member == null || status == null) {
             return CommonResult.FAILURE;
         }
+        taskMapper.selectMemberForUpdate(member.getId().intValue());
+        if (!status && taskMapper.selectOtherActiveTaskForUpdate(member.getId().intValue(), -1L) != null)
+            return CommonResult.FAILURE_NOT_ALLOWED;
         member.setStatus(status ? 1 : 0);
 
         int result = this.userMapper.updateMember(member);

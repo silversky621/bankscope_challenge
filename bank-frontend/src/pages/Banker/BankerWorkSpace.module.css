@@ -339,6 +339,7 @@
 
 .cardInfo {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     font-size: 13px;
     color: #555;
@@ -876,9 +877,30 @@
     transform:translateY(-1px);
 }
 .cardActions {
+    flex-wrap: wrap;
     display: flex;
     justify-content: center;
     gap: 10px;
+}
+
+.cardActions:has(> .btnRecall) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: max-content;
+    max-width: 100%;
+    margin-inline: auto;
+}
+
+.cardActions .btnRecall {
+    grid-column: 1 / -1;
+    flex: 0 0 100%;
+    background: transparent;
+    border: 0;
+    color: #426487;
+    text-decoration: underline;
+    font-size: 0.8rem;
+    padding: 5px 0;
+    cursor: pointer;
 }
 
 .cardActions button {
@@ -889,33 +911,12 @@
     font-weight: bold;
 }
 
-.btnCancelTask {
-    background: #ef4444;
-    color: #ffffff;
-    transition: all 0.2s ease;
+.cardActions button:disabled {
+    opacity: 0.55;
+    cursor: wait;
+    transform: none;
 }
 
-.btnCancelTask:hover {
-    background: #dc2626;
-    transform: translateY(-1px);
-}
-
-.btnStart{
-    padding:8px 12px;
-    border:none;
-    background:#5abcb0;
-    color:white;
-    border-radius:20px;
-    cursor:pointer;
-    font-size:13px;
-    font-weight:500;
-    transition:all 0.2s ease;
-    width: 100%;
-}
-.btnStart:hover {
-    background: #36c2cd;
-    transform: translateY(-1px);
-}
 .backCard {
     display: flex;
 }
@@ -982,7 +983,7 @@
 
 .aiPredictionRow {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
@@ -996,7 +997,7 @@
 .aiPredictionRow strong {
     color: #1d7b5e;
     font-size: 0.76rem;
-    text-align: right;
+    text-align: center;
 }
 
 .aiReasonList {
@@ -1398,14 +1399,4 @@
     color: #888;
 }
 
-/* 수락 취소는 상담 중 주 동작과 구분한 보조 메뉴로 제공한다. */
-.taskMore { position: relative; margin-left: auto; font-size: 0.8rem; }
-.taskMore summary { cursor: pointer; padding: 8px; color: #58635f; }
-.taskMore button { position: absolute; right: 0; top: 100%; z-index: 10; white-space: nowrap;
-    padding: 9px 14px; border: 1px solid #d7dfdc; border-radius: 8px; background: white; color: #37473f; cursor: pointer; }
-.taskPurpose {
-    margin: 0 0 12px;
-    color: #475569;
-    font-size: 13px;
-    line-height: 1.6;
-}
+.queuePosition { flex-basis: 100%; margin-top: 6px; text-align: right; color: #28755b; font-size: 12px; }
