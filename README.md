@@ -6,16 +6,16 @@ AI 기반 통합 스마트 뱅킹 플랫폼. 고객 맞춤 금융 상품 추천,
 
 ## 🔗 라이브 데모 (배포)
 
-**배포 URL: https://votes-everything-node-position.trycloudflare.com/**
+**배포 URL: https://bankscope.jaychoi.dev/**
 
 별도 설치 없이 아래 경로로 바로 접속하여 체험할 수 있다.
 
 | 역할 | 접속 경로 | 계정 |
 |---|---|---|
-| 고객 | [`/login`](https://votes-everything-node-position.trycloudflare.com/login) | `test01@test.com` / `Test1234!` |
-| 관리자 | [`/adminlogin`](https://votes-everything-node-position.trycloudflare.com/adminlogin) | `admin@admin.com` / `1234` |
-| 행원 (워크스페이스) | [`/adminlogin`](https://votes-everything-node-position.trycloudflare.com/adminlogin) | `banker@naver.com` / `1234` |
-| 키오스크 | [`/kiosk`](https://votes-everything-node-position.trycloudflare.com/kiosk) | 비회원: 이름 + 주민번호 13자리 / 회원: `AI_Server/user.txt`의 주민번호 |
+| 고객 | [`/login`](https://bankscope.jaychoi.dev/login) | `test01@test.com` / `Test1234!` |
+| 관리자 | [`/adminlogin`](https://bankscope.jaychoi.dev/adminlogin) | `admin@admin.com` / `1234` |
+| 행원 (워크스페이스) | [`/adminlogin`](https://bankscope.jaychoi.dev/adminlogin) | `banker@naver.com` / `1234` |
+| 키오스크 | [`/kiosk`](https://bankscope.jaychoi.dev/kiosk) | 비회원: 이름 + 주민번호 13자리 / 회원: `AI_Server/user.txt`의 주민번호 |
 
 - 고객 계정 `test01@test.com`은 계좌·대출·카드·가입 상품 데이터를 모두 보유하여 AI 맞춤추천·챗봇 개인화를 함께 확인할 수 있다.
 - 키오스크 접수 시작 버튼은 '근무중' 상태인 행원이 1명 이상일 때 활성화된다.
