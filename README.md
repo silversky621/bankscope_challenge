@@ -125,6 +125,7 @@ cp AI_Server/.env.example AI_Server/.env
 
 주요 수정 항목:
 - `GEMINI_API_KEY` — Google AI Studio에서 발급 (https://aistudio.google.com)
+- `GEMINI_MODEL` — 챗봇이 쓰는 Gemini 모델 (생략 시 `gemini-3.5-flash`)
 - `DB_PASSWORD` — MySQL 비밀번호
 
 패키지를 설치한다 (최초 1회).

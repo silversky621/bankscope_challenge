@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+# gemini-2.5-flash는 2026-11 기준 503(high demand)이 지속되어 기본값을 3.5-flash로 변경
+GEMINI_MODEL = os.getenv('GEMINI_MODEL', 'gemini-3.5-flash')
 
 
 def _load_site_guide() -> str:
@@ -216,7 +218,7 @@ def get_chat_response(user_id: int, user_message: str, get_db_cursor) -> dict:
 
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+            f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
         )
         prompt = (
             "당신은 BankScope 은행 AI 상담원입니다. "
